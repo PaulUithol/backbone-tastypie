@@ -1,7 +1,8 @@
 /**
- * Backbone-relational.js 0.1
+ * Backbone-tastypie.js 0.1
  * (c) 2011 Paul Uithol
- *
+ * 
+ * Backbone-tastypie may be freely distributed under the MIT license.
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
  */
 (function( undefined ) {
