@@ -31,8 +31,8 @@
 				}
 			};
 			
-			Backbone.oldSync( method, model, options );
-			return dfd.promise();
+			dfd.request = Backbone.oldSync( method, model, options );
+			return dfd;
 		}
 		
 		return Backbone.oldSync( method, model, options );
@@ -41,7 +41,19 @@
 	Backbone.Model.prototype.idAttribute = 'resource_uri';
 	
 	Backbone.Model.prototype.url = function() {
-		return this.get('resource_uri') || ( this.collection && this.collection.url ) || this.urlRoot || urlerror();
+		// Use the id if possible
+		var url = this.id;
+		
+		// If there's no idAttribute, try to have the collection construct a url
+		if ( !url ) {
+			url = this.collection && ( _.isFunction( this.collection.url ) ? this.collection.url() : this.collection.url );
+			// Fallback to 'urlRoot'
+			url = url || this.urlRoot;
+		}
+		
+		url && ( url += ( url.length > 0 && url.charAt( url.length - 1 ) === '/' ) ? '' : '/' );
+		
+		return url;
 	};
 	
 	/**
@@ -53,5 +65,26 @@
 	
 	Backbone.Collection.prototype.parse = function( data ) {
 		return data.objects;
+	};
+	
+	Backbone.Collection.prototype.url = function( models ) {
+		// Build a url to retrieve a set of models. This assume the last part of each model's idAttribute
+		// (set to 'resource_uri') contains the model's id.
+		if ( models && models.length ) {
+			var root = this.urlRoot || models[0].urlRoot;
+			root && ( root += ( root.length > 0 && root.charAt( root.length - 1 ) === '/' ) ? '' : '/' );
+			
+			var ids = _.map( models, function( model ) {
+					var parts = _.compact( model.id.split('/') );
+					return parts[ parts.length - 1 ];
+				});
+			var url = root + 'set/' + ids.join(';') + '/';
+		}
+		else {
+			var url = this.urlRoot;
+			url && ( url += ( url.length > 0 && url.charAt( url.length - 1 ) === '/' ) ? '' : '/' );
+		}
+		
+		return url;
 	};
 })();
