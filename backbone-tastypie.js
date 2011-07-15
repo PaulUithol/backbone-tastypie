@@ -68,21 +68,17 @@
 	};
 	
 	Backbone.Collection.prototype.url = function( models ) {
+		var url = this.urlRoot || ( models && models.length && models[0].urlRoot );
+		url && ( url += ( url.length > 0 && url.charAt( url.length - 1 ) === '/' ) ? '' : '/' );
+		
 		// Build a url to retrieve a set of models. This assume the last part of each model's idAttribute
 		// (set to 'resource_uri') contains the model's id.
 		if ( models && models.length ) {
-			var root = this.urlRoot || models[0].urlRoot;
-			root && ( root += ( root.length > 0 && root.charAt( root.length - 1 ) === '/' ) ? '' : '/' );
-			
 			var ids = _.map( models, function( model ) {
 					var parts = _.compact( model.id.split('/') );
 					return parts[ parts.length - 1 ];
 				});
-			var url = root + 'set/' + ids.join(';') + '/';
-		}
-		else {
-			var url = this.urlRoot;
-			url && ( url += ( url.length > 0 && url.charAt( url.length - 1 ) === '/' ) ? '' : '/' );
+			url += 'set/' + ids.join(';') + '/';
 		}
 		
 		return url;
