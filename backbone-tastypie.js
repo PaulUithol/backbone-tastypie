@@ -20,14 +20,19 @@
 			
 			var success = options.success;
 			options.success = function( resp, status, xhr ) {
-				// On the first request, fire a GET.
-				if ( xhr.status === 201 ) { // 201 CREATED
+				// If create is successful and doesn't return a response, fire a GET.
+				// Otherwise, trigger the original 'success'.
+				if ( xhr.status === 201 && resp.length === 0 ) { // 201 CREATED
 					var location = xhr.getResponseHeader('Location');
 					return $.ajax( {
 						   url: location,
 						   success: [ success, dfd.resolve ],
 						   error: dfd.reject
 						});
+				}
+				else {
+					dfd.resolve();
+					return success( resp, status, xhr );
 				}
 			};
 			
@@ -44,10 +49,9 @@
 		// Use the id if possible
 		var url = this.id;
 		
-		// If there's no idAttribute, try to have the collection construct a url
+		// If there's no idAttribute, try to have the collection construct a url. Fallback to 'urlRoot'.
 		if ( !url ) {
 			url = this.collection && ( _.isFunction( this.collection.url ) ? this.collection.url() : this.collection.url );
-			// Fallback to 'urlRoot'
 			url = url || this.urlRoot;
 		}
 		

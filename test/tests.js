@@ -57,7 +57,7 @@ $(document).ready(function() {
 	module("Model creation", { setup: initObjects } );
 	
 	
-		test("Two requests on creation", function() {
+		test("Two requests on creation (when the response is empty)", function() {
 			var animal = new Animal( { species: 'Turtle' } );
 			var response = { objects: { id: 1, 'resource_uri': '/animal/1/' } };
 			
@@ -66,6 +66,16 @@ $(document).ready(function() {
 			
 			var result = secondRequest.success[0]( response, 'get', { status: 200 } );
 			secondRequest.success[1]( response, 'get', { status: 200 } );
+			
+			ok( animal.get('id') === 1 );
+		});
+		
+		test("No extra 'GET' on creation when there is a response", function() {
+			var animal = new Animal( { species: 'Turtle' } );
+			var response = { objects: { id: 1, 'resource_uri': '/animal/1/' } };
+			
+			var dfd = animal.save();
+			var result = dfd.request.success( response, 'created', { status: 201, getResponseHeader: function() { return '/animal/1/'; } } );
 			
 			ok( animal.get('id') === 1 );
 		});
