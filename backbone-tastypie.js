@@ -31,8 +31,8 @@
 						});
 				}
 				else {
-					dfd.resolve();
-					return success( resp, status, xhr );
+					success( resp, status, xhr );
+					return dfd.resolve();
 				}
 			};
 			
