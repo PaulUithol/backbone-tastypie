@@ -22,7 +22,7 @@
 			options.success = function( resp, status, xhr ) {
 				// If create is successful and doesn't return a response, fire a GET.
 				// Otherwise, trigger the original 'success'.
-				if ( xhr.status === 201 && resp.length === 0 ) { // 201 CREATED
+				if ( xhr.status === 201 && !resp ) { // 201 CREATED; response null or empty.
 					var location = xhr.getResponseHeader('Location');
 					return $.ajax( {
 						   url: location,
