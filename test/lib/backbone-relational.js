@@ -1,5 +1,5 @@
 /**	
- * Backbone-relational.js 0.3
+ * Backbone-relational.js 0.4.0
  * (c) 2011 Paul Uithol
  * 
  * Backbone-relational may be freely distributed under the MIT license.
@@ -255,7 +255,8 @@
 		// Make sure 'options' is sane, and fill with defaults from subclasses and this object's prototype
 		options = ( typeof options === 'object' && options ) || {};
 		this.reverseRelation = _.defaults( options.reverseRelation || {}, this.options.reverseRelation );
-		this.reverseRelation.type = _.isString( this.reverseRelation.type ) ? Backbone[ this.reverseRelation.type ] : this.reverseRelation.type;
+		this.reverseRelation.type = !_.isString( this.reverseRelation.type ) ? this.reverseRelation.type :
+				Backbone[ this.reverseRelation.type ] || Backbone.Relational.store.getObjectByName( this.reverseRelation.type );
 		this.options = _.defaults( options, this.options, Backbone.Relation.prototype.options );
 		
 		this.key = this.options.key;
@@ -286,6 +287,8 @@
 			) );
 		}
 		
+		this.initialize();
+		
 		_.bindAll( this, '_modelRemovedFromCollection', '_relatedModelAdded', '_relatedModelRemoved' );
 		// When a model in the store is destroyed, check if it is 'this.instance'.
 		Backbone.Relational.store.getCollection( this.instance )
@@ -295,8 +298,6 @@
 		Backbone.Relational.store.getCollection( this.relatedModel )
 			.bind( 'relational:add', this._relatedModelAdded )
 			.bind( 'relational:remove', this._relatedModelRemoved );
-		
-		this.initialize();
 	};
 	// Fix inheritance :\
 	Backbone.Relation.extend = Backbone.Model.extend;
@@ -723,7 +724,7 @@
 		addRelated: function( model, options ) {
 			var dit = this;
 			model.queue( function() { // Queued to avoid errors for adding 'model' to the 'this.related' set twice
-				if ( !dit.related.getByCid( model ) && !dit.related.get( model ) ) {
+				if ( dit.related && !dit.related.getByCid( model ) && !dit.related.get( model ) ) {
 					dit.related._add( model, options );
 				}
 			});
@@ -812,7 +813,7 @@
 			this._relations = [];
 			
 			_.each( this.relations, function( rel ) {
-					var type = rel.type && ( _.isString( rel.type ) ? Backbone[ rel.type ] : rel.type );
+					var type = !_.isString( rel.type ) ? rel.type :	Backbone[ rel.type ] || Backbone.Relational.store.getObjectByName( rel.type );
 					if ( type && type.prototype instanceof Backbone.Relation.prototype.constructor ) {
 						new type( this, rel ); // Also pushes the new Relation into _relations
 					}
@@ -1028,16 +1029,21 @@
 			_.each( this._relations, function( rel ) {
 					var value = json[ rel.key ];
 					
-					if ( rel.options.includeInJSON && value && _.isFunction( value.toJSON ) ) {
+					if ( rel.options.includeInJSON === true && value && _.isFunction( value.toJSON ) ) {
 						this.acquire();
 						json[ rel.key ] = value.toJSON();
 						this.release();
 					}
-					else if ( value instanceof Backbone.Collection ) {
-						json[ rel.key ] = value.pluck( value.model.prototype.idAttribute );
+					else if ( _.isString( rel.options.includeInJSON ) ) {
+						if ( value instanceof Backbone.Collection ) {
+							json[ rel.key ] = value.pluck( rel.options.includeInJSON );
+						}
+						else if ( value instanceof Backbone.Model ) {
+							json[ rel.key ] = value.get( rel.options.includeInJSON );
+						}
 					}
-					else if ( value instanceof Backbone.Model ) {
-						json[ rel.key ] = value.id;
+					else {
+						delete json[ rel.key ];
 					}
 				}, this );
 			
