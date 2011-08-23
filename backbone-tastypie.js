@@ -68,7 +68,7 @@
 	};
 	
 	Backbone.Collection.prototype.parse = function( data ) {
-		return data.objects;
+		return data && data.objects;
 	};
 	
 	Backbone.Collection.prototype.url = function( models ) {
