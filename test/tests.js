@@ -58,33 +58,67 @@ $(document).ready(function() {
 	
 	
 		test("Two requests on creation (when the response is empty)", function() {
-			expect( 1 );
+			expect( 2 );
 			
 			var animal = new Animal( { species: 'Turtle' } );
-			var response = { objects: { id: 1, 'resource_uri': '/animal/1/' } };
+			var emptyResponse = '';
+			var response = { id: 1, 'resource_uri': '/animal/1/' };
+			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
 			
 			var dfd = animal.save();
 			dfd.done( function() {
-					ok( animal.get('id') === 1 );
+					equals( animal.id, '/animal/1/' );
+					equals( animal.get( 'id' ), 1 );
 				});
 			
 				// Do the server's job
-				var secondRequest = dfd.request.success( '', 'created', { status: 201, getResponseHeader: function() { return '/animal/1/'; } } );
-				secondRequest.success[0]( response, 'get', { status: 200 } );
-				secondRequest.success[1]( response, 'get', { status: 200 } );
+				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				secondRequest.success( response, 'get', { status: 200 } );
 		});
 		
 		test("No extra 'GET' on creation when there is a response", function() {
+			expect( 2 );
+			
 			var animal = new Animal( { species: 'Turtle' } );
-			var response = { objects: { id: 1, 'resource_uri': '/animal/1/' } };
+			var response = { id: 1, 'resource_uri': '/animal/1/' };
+			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
 			
 			var dfd = animal.save();
 			dfd.done( function() {
-					ok( animal.get('id') === 1 );
+					equals( animal.id, '/animal/1/' );
+					equals( animal.get( 'id' ), 1 );
 				});
 			
 				// Do the server's job
-				dfd.request.success( response, 'created', { status: 201, getResponseHeader: function() { return '/animal/1/'; } } );
+				dfd.request.success( response, 'created', xhr );
+		});
+		
+		test( "Success callbacks are triggered, receive proper parameters", function() {
+			expect( 4 );
+			
+			var emptyResponse = '';
+			var response = { id: 1, 'resource_uri': '/animal/1/' };
+			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
+			
+			var successCallback = function( model, resp, xhr ) {
+					equals( resp.id, 1 );
+					equals( model.id, '/animal/1/' );
+				};
+			
+			// Request with a response
+			var animal = new Animal( { species: 'Turtle' } );
+			var dfd = animal.save( null, { success: successCallback } );
+			
+				// Do the server's job
+				dfd.request.success( response, 'created', xhr );
+			
+			// Request without a response right away, response in second request
+			animal = new Animal( { species: 'Lion' } );
+			dfd = animal.save( null, { success: successCallback } );
+			
+				// Do the server's job
+				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				secondRequest.success( response, 'get', { status: 200 } );
 		});
 	
 	

@@ -19,20 +19,20 @@
 			var dfd = new $.Deferred();
 			
 			var success = options.success;
+			dfd.done( success );
 			options.success = function( resp, status, xhr ) {
-				// If create is successful and doesn't return a response, fire a GET.
-				// Otherwise, trigger the original 'success'.
+				// If create is successful but doesn't return a response, fire an extra GET.
+				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
 				if ( xhr.status === 201 && !resp ) { // 201 CREATED; response null or empty.
-					var location = xhr.getResponseHeader('Location');
+					var location = xhr.getResponseHeader( 'Location' );
 					return $.ajax( {
 						   url: location,
-						   success: [ success, dfd.resolve ],
+						   success: dfd.resolve,
 						   error: dfd.reject
 						});
 				}
 				else {
-					success( resp, status, xhr );
-					return dfd.resolve();
+					return dfd.resolveWith( options.context || options, [ resp, status, xhr ] );
 				}
 			};
 			
