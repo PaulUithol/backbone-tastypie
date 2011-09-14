@@ -18,8 +18,8 @@
 		if ( method === 'create' ) {
 			var dfd = new $.Deferred();
 			
-			var success = options.success;
-			dfd.done( success );
+			// Set up 'success' handling
+			dfd.done( options.success );
 			options.success = function( resp, status, xhr ) {
 				// If create is successful but doesn't return a response, fire an extra GET.
 				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
@@ -36,6 +36,11 @@
 				}
 			};
 			
+			// Set up 'error' handling
+			dfd.fail( options.error );
+			options.error = dfd.reject;
+			
+			// Make the request, make it accessibly by assigning it to the 'request' property on the deferred 
 			dfd.request = Backbone.oldSync( method, model, options );
 			return dfd;
 		}

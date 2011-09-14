@@ -94,7 +94,7 @@ $(document).ready(function() {
 		});
 		
 		test( "Success callbacks are triggered, receive proper parameters", function() {
-			expect( 4 );
+			expect( 6 );
 			
 			var emptyResponse = '';
 			var response = { id: 1, 'resource_uri': '/animal/1/' };
@@ -108,6 +108,10 @@ $(document).ready(function() {
 			// Request with a response
 			var animal = new Animal( { species: 'Turtle' } );
 			var dfd = animal.save( null, { success: successCallback } );
+			// Add another 'success' callback
+			dfd.done( function() {
+					ok( true, "Done triggered" );
+				});
 			
 				// Do the server's job
 				dfd.request.success( response, 'created', xhr );
@@ -115,10 +119,35 @@ $(document).ready(function() {
 			// Request without a response right away, response in second request
 			animal = new Animal( { species: 'Lion' } );
 			dfd = animal.save( null, { success: successCallback } );
+			// Add another 'success' callback
+			dfd.done( function() {
+					ok( true, "Done triggered" );
+				});
 			
 				// Do the server's job
 				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
 				secondRequest.success( response, 'get', { status: 200 } );
+		});
+		
+		test( "Error callbacks are triggered, receive proper parameters", function() {
+			expect( 2 );
+			
+			var xhr = { status: 404 };
+			
+			var errorCallback = function( model, resp, options ) {
+					equals( resp.status, 404 );
+				};
+			
+			// Request with a response
+			var animal = new Animal( { species: 'Turtle' } );
+			var dfd = animal.save( null, { error: errorCallback } );
+			// Add another 'error' callback
+			dfd.fail( function() {
+					ok( true, "Fail triggered" );
+				});
+			
+				// Do the server's job
+				dfd.request.error( xhr, 'error', 'Not found' );
 		});
 	
 	
