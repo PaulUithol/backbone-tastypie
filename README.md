@@ -2,7 +2,7 @@
 A small conversion layer to make [backbone.js](https://github.com/documentcloud/backbone) and [django-tastypie](https://github.com/toastdriven/django-tastypie) work together happily.
 
 ## Usage
-Add `django_tastypie` to your `INSTALLED_APPS` setting, and add the following to your base template:
+Add `backbone_tastypie` to your `INSTALLED_APPS` setting, and add the following to your base template:
 `<script type="text/javascript" src="{{ STATIC_URL }}js/backbone-tastypie.js"></script>`
 
 ## How it works
