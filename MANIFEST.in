@@ -1,0 +1,6 @@
+global-exclude *.pyc
+
+include README.md
+
+recursive-include admin_tools_stats *
+recursive-include backbone_tastypie *
