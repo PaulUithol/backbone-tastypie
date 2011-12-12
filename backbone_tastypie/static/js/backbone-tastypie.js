@@ -38,7 +38,9 @@
 			
 			// Set up 'error' handling
 			dfd.fail( options.error );
-			options.error = dfd.reject;
+			options.error = function( xhr, status, resp ) {
+				dfd.rejectWith( options.context || options, [ xhr, status, resp ] );
+			};
 			
 			// Make the request, make it accessibly by assigning it to the 'request' property on the deferred 
 			dfd.request = Backbone.oldSync( method, model, options );
@@ -66,12 +68,15 @@
 	};
 	
 	/**
-	 * Return 'data.objects' if it exists and is an array, or else just plain 'data'.
+	 * Return the first entry in 'data.objects' if it exists and is an array, or else just plain 'data'.
 	 */
 	Backbone.Model.prototype.parse = function( data ) {
 		return data && data.objects && ( _.isArray( data.objects ) ? data.objects[ 0 ] : data.objects ) || data;
 	};
 	
+	/**
+	 * Return 'data.objects' if it exists.
+	 */
 	Backbone.Collection.prototype.parse = function( data ) {
 		return data && data.objects;
 	};
