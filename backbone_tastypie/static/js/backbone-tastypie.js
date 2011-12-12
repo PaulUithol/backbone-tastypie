@@ -76,8 +76,13 @@
 	
 	/**
 	 * Return 'data.objects' if it exists.
+	 * If present, the 'data.meta' object is assigned to the 'collection.meta' var.
 	 */
 	Backbone.Collection.prototype.parse = function( data ) {
+		if ( data && data.meta ) {
+			this.meta = data.meta;
+		}
+		
 		return data && data.objects;
 	};
 	
