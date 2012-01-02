@@ -156,26 +156,26 @@ $(document).ready(function() {
 	
 		test("Model url", function() {
 			var person = new Person();
-			
-			var url = person.url();
-			ok ( url == null );
-			
-			person.urlRoot = '/person';
-			
-			url = person.url();
-			ok ( url == '/person/' );
-			
+			equal( person.url(), null );
+
+			// If the model doesn't have an 'urlRoot' and no value for it's 'idAttribute', the collection's
+			// 'urlRoot' is be used as a fallback ( a POST there creates a resource).
 			var coll = new Backbone.Collection();
 			coll.urlRoot = '/persons';
 			person.collection = coll;
-			
-			url = person.url();
-			ok ( url == '/persons/' );
-			
+			equal( person.url(), '/persons/' );
+
+			// If present, the model's urlRoot is used as a fallback.
+			person.urlRoot = '/person';
+			equal( person.url(), '/person/' );
+
+			// The value of the explicit 'id' attribute is added to the 'urlRoot' when available
+			person.set( 'id', 2 );
+			equal( person.url(), '/person/2/' );
+
+			// If the idAttribute is set, it's used as the uri verbatim.
 			person.set( { resource_uri: '/person/1/' } );
-			
-			url = person.url();
-			ok ( url == '/person/1/' );
+			equal( person.url(), '/person/1/' );
 		});
 	
 	
@@ -191,7 +191,7 @@ $(document).ready(function() {
 				]
 			});
 			
-			var coll = zoo.get('animals');
+			var coll = zoo.get( 'animals' );
 			
 			var url = coll.url();
 			ok( url === '/animal/' );

@@ -6,8 +6,6 @@
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
  */
 (function( undefined ) {
-	var Backbone = this.Backbone;
-	
 	/**
 	 * Override Backbone's sync function, to do a GET upon receiving a HTTP CREATED.
 	 * This requires 2 requests to do a create, so you may want to use some other method in production.
@@ -56,15 +54,20 @@
 		// Use the id if possible
 		var url = this.id;
 		
-		// If there's no idAttribute, try to have the collection construct a url. Fallback to 'urlRoot'.
+		// If there's no idAttribute, use the 'urlRoot'. Fallback to try to have the collection construct a url.
+		// Explicitly add the 'id' attribute if the model has one.
 		if ( !url ) {
-			url = this.collection && ( _.isFunction( this.collection.url ) ? this.collection.url() : this.collection.url );
-			url = url || this.urlRoot;
+			url = this.urlRoot;
+			url = url || this.collection && ( _.isFunction( this.collection.url ) ? this.collection.url() : this.collection.url );
+
+			if ( url && this.has( 'id' ) ) {
+				url = addSlash( url ) + this.get( 'id' );
+			}
 		}
+
+		url = url && addSlash( url );
 		
-		url && ( url += ( url.length > 0 && url.charAt( url.length - 1 ) === '/' ) ? '' : '/' );
-		
-		return url;
+		return url || null;
 	};
 	
 	/**
@@ -88,18 +91,22 @@
 	
 	Backbone.Collection.prototype.url = function( models ) {
 		var url = this.urlRoot || ( models && models.length && models[0].urlRoot );
-		url && ( url += ( url.length > 0 && url.charAt( url.length - 1 ) === '/' ) ? '' : '/' );
+		url = url && addSlash( url );
 		
 		// Build a url to retrieve a set of models. This assume the last part of each model's idAttribute
 		// (set to 'resource_uri') contains the model's id.
 		if ( models && models.length ) {
 			var ids = _.map( models, function( model ) {
-					var parts = _.compact( model.id.split('/') );
+					var parts = _.compact( model.id.split( '/' ) );
 					return parts[ parts.length - 1 ];
 				});
-			url += 'set/' + ids.join(';') + '/';
+			url += 'set/' + ids.join( ';' ) + '/';
 		}
 		
-		return url;
+		return url || null;
 	};
+
+	var addSlash = function( str ) {
+		return str + ( ( str.length > 0 && str.charAt( str.length - 1 ) === '/' ) ? '' : '/' );
+	}
 })();
