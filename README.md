@@ -25,13 +25,11 @@ This software assumes you are using the [AMD optimised version of backbone](http
 3. When you need backbone-tastypie simply call:
 
 <code>
+	<pre>
     require(["backbone-tastypie"],function(Backbone) {
       // This code loads when backbone-tastypie and all of its dependencies are loaded.
       // The local backbone variable is the modified backbone-tastypie one.
       // If you want vinalla backbone, you can just change ["backbone-tastypie"] to ["backbone"]!
     });
+    </pre>
 </code>
-
-  export LINEBREAK_SYSTEM=mac
-
-  linebreak encode windows.txt mac.txt
