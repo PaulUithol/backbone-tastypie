@@ -14,12 +14,14 @@ This software assumes you are using the [AMD optimised version of backbone](http
 2. Ensure that your main.js knows the paths of backbone (the AMD optimised version!) and backbone-tastypie. For example:
 
 <code>
+	<pre>
     require.config({
       paths: {
         "backbone": "/static/js/backbone",
         "backbone-tastypie": "/static/js/backbone-tastypie"
       }
-    });`
+    });
+    </pre>
 </code>
 
 3. When you need backbone-tastypie simply call:
