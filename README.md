@@ -13,17 +13,21 @@ This software assumes you are using the [AMD optimised version of backbone](http
 1. Add `backbone_tastypie` to your `INSTALLED_APPS` setting.
 2. Ensure that your main.js knows the paths of backbone (the AMD optimised version!) and backbone-tastypie. For example:
 
+<code>
     require.config({
       paths: {
         "backbone": "/static/js/backbone",
         "backbone-tastypie": "/static/js/backbone-tastypie"
       }
     });`
+</code>
 
 3. When you need backbone-tastypie simply call:
 
+<code>
     require(["backbone-tastypie"],function(Backbone) {
       // This code loads when backbone-tastypie and all of its dependencies are loaded.
       // The local backbone variable is the modified backbone-tastypie one.
       // If you want vinalla backbone, you can just change ["backbone-tastypie"] to ["backbone"]!
-    })
+    });
+</code>
