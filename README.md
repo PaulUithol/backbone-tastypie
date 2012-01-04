@@ -31,3 +31,7 @@ This software assumes you are using the [AMD optimised version of backbone](http
       // If you want vinalla backbone, you can just change ["backbone-tastypie"] to ["backbone"]!
     });
 </code>
+
+  export LINEBREAK_SYSTEM=mac
+
+  linebreak encode windows.txt mac.txt
