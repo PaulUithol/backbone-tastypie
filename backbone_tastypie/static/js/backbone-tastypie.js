@@ -2,15 +2,28 @@
  * Backbone-tastypie.js 0.1
  * (c) 2011 Paul Uithol
  * 
- * Backbone-tastypie may be freely distributed under the MIT license.
+ * Backbone-tastypie-amd may be freely distributed under the MIT license.
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
+ *
+ * Forked and modified by Adam Thomas 2012 to add AMD support.
  */
-(function( undefined ) {
+
+
+(function (factory) {
+	if (typeof define === 'function' && define.amd) {
+		// An AMD compatible require library is available
+		define(['backbone'], factory);
+	} else {
+		// No require library, assume backbone is available and edit global
+		factory(Backbone);
+	}
+}(function (Backbone) {
 	/**
 	 * Override Backbone's sync function, to do a GET upon receiving a HTTP CREATED.
 	 * This requires 2 requests to do a create, so you may want to use some other method in production.
 	 * Modified from http://joshbohde.com/blog/backbonejs-and-django
 	 */
+
 	Backbone.oldSync = Backbone.sync;
 	Backbone.sync = function( method, model, options ) {
 		if ( method === 'create' ) {
@@ -77,7 +90,7 @@
 		return data && data.objects && ( _.isArray( data.objects ) ? data.objects[ 0 ] : data.objects ) || data;
 	};
 	
-	/**
+	/**n
 	 * Return 'data.objects' if it exists.
 	 * If present, the 'data.meta' object is assigned to the 'collection.meta' var.
 	 */
@@ -109,4 +122,7 @@
 	var addSlash = function( str ) {
 		return str + ( ( str.length > 0 && str.charAt( str.length - 1 ) === '/' ) ? '' : '/' );
 	}
-})();
+
+	return Backbone;
+
+}));
