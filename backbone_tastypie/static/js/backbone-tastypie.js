@@ -6,6 +6,8 @@
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
  */
 (function( undefined ) {
+	// Backbone.noConflict support. Save local copy of Backbone object.
+	var Backbone = window.Backbone;
 	/**
 	 * Override Backbone's sync function, to do a GET upon receiving a HTTP CREATED.
 	 * This requires 2 requests to do a create, so you may want to use some other method in production.
