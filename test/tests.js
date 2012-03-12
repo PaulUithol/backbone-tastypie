@@ -165,12 +165,12 @@ $(document).ready(function() {
 			person.collection = coll;
 			equal( person.url(), '/persons/' );
 
-			// If present, the model's urlRoot is used as a fallback.
-			person.urlRoot = '/person';
-			equal( person.url(), '/person/' );
-
 			// The value of the explicit 'id' attribute is added to the 'urlRoot' when available
 			person.set( 'id', 2 );
+			equal( person.url(), '/persons/2/' );
+			
+			// If present, the model's urlRoot is used as a fallback.
+			person.urlRoot = '/person';
 			equal( person.url(), '/person/2/' );
 
 			// If the idAttribute is set, it's used as the uri verbatim.
