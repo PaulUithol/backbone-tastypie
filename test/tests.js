@@ -13,8 +13,6 @@ if ( !window.console ) {
 }
 
 $(document).ready(function() {
-	var originalSettings = _.clone( Backbone.Tastypie );
-
 	$.ajax = function( obj ) {
 		window.requests.push( obj );
 		return obj;
@@ -45,7 +43,14 @@ $(document).ready(function() {
 	Person = Backbone.RelationalModel.extend({});
 	
 	function initObjects() {
-		Backbone.Tastypie = _.clone( originalSettings );
+		Backbone.Tastypie = {
+			doGetOnEmptyPostResponse: true,
+			doGetOnEmptyPutResponse: false,
+			apiKey: {
+				username: '',
+				key: ''
+			}
+		};
 
 		// Reset last ajax requests
 		window.requests = [];
@@ -58,10 +63,21 @@ $(document).ready(function() {
 	}
 	
 	
-	module("Model creation", { setup: initObjects } );
+	module("Requests", { setup: initObjects } );
+
+		test( "ApiKey sent as an extra header", function() {
+			Backbone.Tastypie.apiKey = {
+				username: 'daniel',
+				key: '204db7bcfafb2deb7506b89eb3b9b715b09905c8'
+			};
+
+			var animal = new Animal( { species: 'Panther' } );
+			var dfd = animal.save();
+
+			equal( dfd.request.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
+		});
 	
-	
-		test("Extra GET on creation if the response is empty", function() {
+		test( "Extra GET on creation if the response is empty", function() {
 			expect( 3 );
 			
 			var animal = new Animal( { species: 'Turtle' } );
@@ -82,7 +98,7 @@ $(document).ready(function() {
 			ok( window.requests.length === 2 );
 		});
 
-		test("No extra 'GET' on creation when 'doGetOnEmptyPostResponse' is false", function() {
+		test( "No extra 'GET' on creation when 'doGetOnEmptyPostResponse' is false", function() {
 			expect( 2 );
 
 			Backbone.Tastypie.doGetOnEmptyPostResponse = false;
@@ -102,7 +118,7 @@ $(document).ready(function() {
 			ok( window.requests.length === 1 );
 		});
 
-		test("No extra 'GET' on creation when there is a response", function() {
+		test( "No extra 'GET' on creation when there is a response", function() {
 			expect( 3 );
 			
 			var animal = new Animal( { species: 'Turtle' } );
@@ -121,7 +137,7 @@ $(document).ready(function() {
 			ok( window.requests.length === 1 );
 		});
 
-		test("Extra GET on update if the response is empty, and 'doGetOnEmptyPutResponse' is true", function() {
+		test( "Extra GET on update if the response is empty, and 'doGetOnEmptyPutResponse' is true", function() {
 			expect( 2 );
 
 			Backbone.Tastypie.doGetOnEmptyPutResponse = true;
@@ -143,7 +159,7 @@ $(document).ready(function() {
 			ok( window.requests.length === 2 );
 		});
 
-		test("No extra 'GET' on update when there is a response", function() {
+		test( "No extra 'GET' on update when there is a response", function() {
 			expect( 1 );
 
 			Backbone.Tastypie.doGetOnEmptyPutResponse = true;
@@ -160,7 +176,7 @@ $(document).ready(function() {
 			ok( window.requests.length === 1 );
 		});
 
-		test("No extra 'GET' on update when 'doGetOnEmptyPutResponse' is false", function() {
+		test( "No extra 'GET' on update when 'doGetOnEmptyPutResponse' is false", function() {
 			expect( 1 );
 
 			var animal = new Animal( { species: 'Turtle', id: 1, 'resource_uri': '/animal/1/' } );
@@ -234,10 +250,10 @@ $(document).ready(function() {
 		});
 	
 	
-	module("Model url building", { setup: initObjects } );
+	module( "Model url building", { setup: initObjects } );
 	
 	
-		test("Model url", function() {
+		test( "Model url", function() {
 			var person = new Person();
 			equal( person.url(), null );
 
@@ -262,10 +278,10 @@ $(document).ready(function() {
 		});
 	
 	
-	module("Collection url building", { setup: initObjects } );
+	module( "Collection url building", { setup: initObjects } );
 	
 	
-		test("Url for a set by the collection", function() {
+		test( "Url for a set by the collection", function() {
 			var zoo = new Zoo();
 			zoo.set({
 				animals: [

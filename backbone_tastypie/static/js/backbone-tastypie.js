@@ -11,7 +11,11 @@
 
 	Backbone.Tastypie = {
 		doGetOnEmptyPostResponse: true,
-		doGetOnEmptyPutResponse: false
+		doGetOnEmptyPutResponse: false,
+		apiKey: {
+			username: '',
+			key: ''
+		}
 	};
 
 	/**
@@ -21,6 +25,13 @@
 	 */
 	Backbone.oldSync = Backbone.sync;
 	Backbone.sync = function( method, model, options ) {
+
+		if ( Backbone.Tastypie.apiKey && Backbone.Tastypie.apiKey.username.length ) {
+			options.headers = _.extend( {
+				'Authorization': 'ApiKey ' + Backbone.Tastypie.apiKey.username + ':' + Backbone.Tastypie.apiKey.key
+			}, options.headers );
+		}
+
 		if ( ( method === 'create' && Backbone.Tastypie.doGetOnEmptyPostResponse ) ||
 			( method === 'update' && Backbone.Tastypie.doGetOnEmptyPutResponse ) ) {
 			var dfd = new $.Deferred();
