@@ -13,6 +13,8 @@ if ( !window.console ) {
 }
 
 $(document).ready(function() {
+	var originalSettings = _.clone( Backbone.Tastypie );
+
 	$.ajax = function( obj ) {
 		window.requests.push( obj );
 		return obj;
@@ -43,6 +45,8 @@ $(document).ready(function() {
 	Person = Backbone.RelationalModel.extend({});
 	
 	function initObjects() {
+		Backbone.Tastypie = _.clone( originalSettings );
+
 		// Reset last ajax requests
 		window.requests = [];
 		
@@ -57,8 +61,8 @@ $(document).ready(function() {
 	module("Model creation", { setup: initObjects } );
 	
 	
-		test("Two requests on creation (when the response is empty)", function() {
-			expect( 2 );
+		test("Extra GET on creation if the response is empty", function() {
+			expect( 3 );
 			
 			var animal = new Animal( { species: 'Turtle' } );
 			var emptyResponse = '';
@@ -67,17 +71,39 @@ $(document).ready(function() {
 			
 			var dfd = animal.save();
 			dfd.done( function() {
-					equals( animal.id, '/animal/1/' );
-					equals( animal.get( 'id' ), 1 );
-				});
+				equal( animal.id, '/animal/1/' );
+				equal( animal.get( 'id' ), 1 );
+			});
 			
 				// Do the server's job
 				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
 				secondRequest.success( response, 'get', { status: 200 } );
+
+			ok( window.requests.length === 2 );
 		});
-		
-		test("No extra 'GET' on creation when there is a response", function() {
+
+		test("No extra 'GET' on creation when 'doGetOnEmptyPostResponse' is false", function() {
 			expect( 2 );
+
+			Backbone.Tastypie.doGetOnEmptyPostResponse = false;
+
+			var animal = new Animal( { species: 'Turtle' } );
+			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
+
+			var request = animal.save( {}, {
+				success: function() {
+					equal( animal.id, null );
+				}
+			});
+
+				// Do the server's job
+				request.success( '', 'created', xhr );
+
+			ok( window.requests.length === 1 );
+		});
+
+		test("No extra 'GET' on creation when there is a response", function() {
+			expect( 3 );
 			
 			var animal = new Animal( { species: 'Turtle' } );
 			var response = { id: 1, 'resource_uri': '/animal/1/' };
@@ -85,14 +111,71 @@ $(document).ready(function() {
 			
 			var dfd = animal.save();
 			dfd.done( function() {
-					equals( animal.id, '/animal/1/' );
-					equals( animal.get( 'id' ), 1 );
-				});
+				equal( animal.id, '/animal/1/' );
+				equal( animal.get( 'id' ), 1 );
+			});
 			
 				// Do the server's job
 				dfd.request.success( response, 'created', xhr );
+
+			ok( window.requests.length === 1 );
 		});
-		
+
+		test("Extra GET on update if the response is empty, and 'doGetOnEmptyPutResponse' is true", function() {
+			expect( 2 );
+
+			Backbone.Tastypie.doGetOnEmptyPutResponse = true;
+
+			var animal = new Animal( { species: 'Turtle', id: 1, 'resource_uri': '/animal/1/' } );
+			var emptyResponse = '';
+			var response = { id: 1, 'resource_uri': '/animal/1/', weight: 500 };
+			var xhr = { status: 202, getResponseHeader: function() { return null; } };
+
+			var dfd = animal.save();
+			dfd.done( function() {
+				equal( animal.get( 'weight' ), 500 );
+			});
+
+				// Do the server's job
+				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				secondRequest.success( response, 'get', { status: 200 } );
+
+			ok( window.requests.length === 2 );
+		});
+
+		test("No extra 'GET' on update when there is a response", function() {
+			expect( 1 );
+
+			Backbone.Tastypie.doGetOnEmptyPutResponse = true;
+
+			var animal = new Animal( { species: 'Turtle', id: 1, 'resource_uri': '/animal/1/' } );
+			var response = { id: 1, 'resource_uri': '/animal/1/', weight: 500 };
+			var xhr = { status: 204, getResponseHeader: function() { return null; } };
+
+			var dfd = animal.save();
+
+				// Do the server's job
+				dfd.request.success( response, 'created', xhr );
+
+			ok( window.requests.length === 1 );
+		});
+
+		test("No extra 'GET' on update when 'doGetOnEmptyPutResponse' is false", function() {
+			expect( 1 );
+
+			var animal = new Animal( { species: 'Turtle', id: 1, 'resource_uri': '/animal/1/' } );
+			var xhr = { status: 204, getResponseHeader: function() { return null; } };
+
+			var request = animal.save( {}, {
+				success: function() {
+					equal( animal.get( 'weight' ), null );
+				}
+			});
+
+				// Do the server's job
+				request.success( '', 'created', xhr );
+		});
+
 		test( "Success callbacks are triggered, receive proper parameters", function() {
 			expect( 6 );
 			
@@ -101,17 +184,17 @@ $(document).ready(function() {
 			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
 			
 			var successCallback = function( model, resp, xhr ) {
-					equals( resp.id, 1 );
-					equals( model.id, '/animal/1/' );
-				};
+				equal( resp.id, 1 );
+				equal( model.id, '/animal/1/' );
+			};
 			
 			// Request with a response
 			var animal = new Animal( { species: 'Turtle' } );
 			var dfd = animal.save( null, { success: successCallback } );
 			// Add another 'success' callback
 			dfd.done( function() {
-					ok( true, "Done triggered" );
-				});
+				ok( true, "Done triggered" );
+			});
 			
 				// Do the server's job
 				dfd.request.success( response, 'created', xhr );
@@ -121,8 +204,8 @@ $(document).ready(function() {
 			dfd = animal.save( null, { success: successCallback } );
 			// Add another 'success' callback
 			dfd.done( function() {
-					ok( true, "Done triggered" );
-				});
+				ok( true, "Done triggered" );
+			});
 			
 				// Do the server's job
 				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
@@ -135,16 +218,16 @@ $(document).ready(function() {
 			var xhr = { status: 404 };
 			
 			var errorCallback = function( model, resp, options ) {
-					equals( resp.status, 404 );
-				};
+				equal( resp.status, 404 );
+			};
 			
 			// Request with a response
 			var animal = new Animal( { species: 'Turtle' } );
 			var dfd = animal.save( null, { error: errorCallback } );
 			// Add another 'error' callback
 			dfd.fail( function() {
-					ok( true, "Fail triggered" );
-				});
+				ok( true, "Fail triggered" );
+			});
 			
 				// Do the server's job
 				dfd.request.error( xhr, 'error', 'Not found' );

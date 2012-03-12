@@ -8,6 +8,12 @@
 (function( undefined ) {
 	// Backbone.noConflict support. Save local copy of Backbone object.
 	var Backbone = window.Backbone;
+
+	Backbone.Tastypie = {
+		doGetOnEmptyPostResponse: true,
+		doGetOnEmptyPutResponse: false
+	};
+
 	/**
 	 * Override Backbone's sync function, to do a GET upon receiving a HTTP CREATED.
 	 * This requires 2 requests to do a create, so you may want to use some other method in production.
@@ -15,7 +21,8 @@
 	 */
 	Backbone.oldSync = Backbone.sync;
 	Backbone.sync = function( method, model, options ) {
-		if ( method === 'create' ) {
+		if ( ( method === 'create' && Backbone.Tastypie.doGetOnEmptyPostResponse ) ||
+			( method === 'update' && Backbone.Tastypie.doGetOnEmptyPutResponse ) ) {
 			var dfd = new $.Deferred();
 			
 			// Set up 'success' handling
@@ -23,8 +30,8 @@
 			options.success = function( resp, status, xhr ) {
 				// If create is successful but doesn't return a response, fire an extra GET.
 				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
-				if ( xhr.status === 201 && !resp ) { // 201 CREATED; response null or empty.
-					var location = xhr.getResponseHeader( 'Location' );
+				if ( !resp && ( xhr.status === 201 || xhr.status === 202 || xhr.status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
+					var location = xhr.getResponseHeader( 'Location' ) || model.id;
 					return $.ajax( {
 						   url: location,
 						   success: dfd.resolve,
@@ -42,7 +49,7 @@
 				dfd.rejectWith( options.context || options, [ xhr, status, resp ] );
 			};
 			
-			// Make the request, make it accessibly by assigning it to the 'request' property on the deferred 
+			// Make the request, make it accessibly by assigning it to the 'request' property on the deferred
 			dfd.request = Backbone.oldSync( method, model, options );
 			return dfd;
 		}
