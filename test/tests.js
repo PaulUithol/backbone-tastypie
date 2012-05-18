@@ -64,7 +64,8 @@ $(document).ready(function() {
 	
 	
 	module("Requests", { setup: initObjects } );
-
+	
+	
 		test( "ApiKey sent as an extra header", function() {
 			Backbone.Tastypie.apiKey = {
 				username: 'daniel',
@@ -72,9 +73,20 @@ $(document).ready(function() {
 			};
 
 			var animal = new Animal( { species: 'Panther' } );
+			var emptyResponse = '';
+			var response = { id: 1, 'resource_uri': '/animal/1/' };
+			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
+			
 			var dfd = animal.save();
 
 			equal( dfd.request.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
+			
+				// Do the server's job; trigger the success callbacks
+				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				secondRequest.success( response, 'get', { status: 200 } );
+				
+			ok( window.requests.length === 2 );
+			equal( secondRequest.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
 		});
 	
 		test( "Extra GET on creation if the response is empty", function() {
@@ -91,7 +103,7 @@ $(document).ready(function() {
 				equal( animal.get( 'id' ), 1 );
 			});
 			
-				// Do the server's job
+				// Do the server's job; trigger the success callbacks
 				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
 				secondRequest.success( response, 'get', { status: 200 } );
 

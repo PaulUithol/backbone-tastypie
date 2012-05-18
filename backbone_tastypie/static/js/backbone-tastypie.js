@@ -6,6 +6,8 @@
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
  */
 (function( undefined ) {
+	"use strict";
+	
 	// Backbone.noConflict support. Save local copy of Backbone object.
 	var Backbone = window.Backbone;
 
@@ -25,11 +27,13 @@
 	 */
 	Backbone.oldSync = Backbone.sync;
 	Backbone.sync = function( method, model, options ) {
-
+		var headers = '';
+	
 		if ( Backbone.Tastypie.apiKey && Backbone.Tastypie.apiKey.username.length ) {
-			options.headers = _.extend( {
+			headers = _.extend( {
 				'Authorization': 'ApiKey ' + Backbone.Tastypie.apiKey.username + ':' + Backbone.Tastypie.apiKey.key
 			}, options.headers );
+			options.headers = headers;
 		}
 
 		if ( ( method === 'create' && Backbone.Tastypie.doGetOnEmptyPostResponse ) ||
@@ -45,6 +49,7 @@
 					var location = xhr.getResponseHeader( 'Location' ) || model.id;
 					return $.ajax( {
 						   url: location,
+						   headers: headers,
 						   success: dfd.resolve,
 						   error: dfd.reject
 						});
