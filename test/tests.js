@@ -99,7 +99,7 @@ $(document).ready(function() {
 			
 			var dfd = animal.save();
 			dfd.done( function() {
-				equal( animal.id, '/animal/1/' );
+				equal( animal.id, 1 );
 				equal( animal.get( 'id' ), 1 );
 			});
 			
@@ -139,7 +139,7 @@ $(document).ready(function() {
 			
 			var dfd = animal.save();
 			dfd.done( function() {
-				equal( animal.id, '/animal/1/' );
+				equal( animal.id, 1 );
 				equal( animal.get( 'id' ), 1 );
 			});
 			
@@ -213,7 +213,7 @@ $(document).ready(function() {
 			
 			var successCallback = function( model, resp, xhr ) {
 				equal( resp.id, 1 );
-				equal( model.id, '/animal/1/' );
+				equal( model.id, 1 );
 			};
 			
 			// Request with a response
