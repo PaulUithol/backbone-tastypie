@@ -7,9 +7,17 @@
  */
 (function( undefined ) {
 	"use strict";
-	
+
 	// Backbone.noConflict support. Save local copy of Backbone object.
-	var Backbone = window.Backbone;
+	var Backbone;
+
+	// CommonJS shim
+	if ( typeof window === 'undefined' ) {
+		Backbone = require( 'backbone' );
+	}
+	else {
+		Backbone = window.Backbone;
+	}
 
 	Backbone.Tastypie = {
 		doGetOnEmptyPostResponse: true,
