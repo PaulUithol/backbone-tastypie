@@ -284,6 +284,10 @@ $(document).ready(function() {
 			person.urlRoot = '/person';
 			equal( person.url(), '/person/2/' );
 
+			// Model's urlRoot should work as a function.
+			person.urlRoot = function() { return "/person"; }
+			equal( person.url(), '/person/2/' );
+
 			// If the idAttribute is set, it's used as the uri verbatim.
 			person.set( { resource_uri: '/person/1/' } );
 			equal( person.url(), '/person/1/' );
