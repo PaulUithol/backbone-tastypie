@@ -17,7 +17,8 @@
 		apiKey: {
 			username: '',
 			key: ''
-		}
+		},
+		csrfToken: ''
 	};
 
 	/**
@@ -34,6 +35,13 @@
 				'Authorization': 'ApiKey ' + Backbone.Tastypie.apiKey.username + ':' + Backbone.Tastypie.apiKey.key
 			}, options.headers );
 			options.headers = headers;
+		}
+
+		if ( Backbone.Tastypie.csrfToken && Backbone.Tastypie.csrfToken.length ) {
+			headers = _.extend( {
+				'X-CSRFToken': Backbone.Tastypie.csrfToken 
+			}, options.headers );
+			options.headers = headers;		
 		}
 
 		if ( ( method === 'create' && Backbone.Tastypie.doGetOnEmptyPostResponse ) ||

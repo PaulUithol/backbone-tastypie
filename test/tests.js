@@ -49,7 +49,8 @@ $(document).ready(function() {
 			apiKey: {
 				username: '',
 				key: ''
-			}
+			},
+			csrfToken: ''
 		};
 
 		// Reset last ajax requests
@@ -87,6 +88,26 @@ $(document).ready(function() {
 				
 			ok( window.requests.length === 2 );
 			equal( secondRequest.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
+		});
+
+		test( "CSRF token sent as an extra header", function() {
+			Backbone.Tastypie.csrfToken = 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX'
+
+			var animal = new Animal( { species: 'Panther' } );
+			var emptyResponse = '';
+			var response = { id: 1, 'resource_uri': '/animal/1/' };
+			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
+			
+			var dfd = animal.save();
+
+			equal( dfd.request.headers[ 'X-CSRFToken' ], 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX' );
+			
+				// Do the server's job; trigger the success callbacks
+				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				secondRequest.success( response, 'get', { status: 200 } );
+				
+			ok( window.requests.length === 2 );
+			equal( secondRequest.headers[ 'X-CSRFToken' ], 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX' );
 		});
 	
 		test( "Extra GET on creation if the response is empty", function() {
