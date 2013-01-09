@@ -155,4 +155,36 @@
 	var addSlash = function( str ) {
 		return str + ( ( str.length > 0 && str.charAt( str.length - 1 ) === '/' ) ? '' : '/' );
 	}
+
+	/**
+	 * Fetch the next page of a tastypie paged response based on the
+	 * offest, limit and total_count attributes of the respone's meta.
+	 */
+	Backbone.Collection.prototype.fetchNext = function( options ) {
+	    options = options || {};
+
+	    var filters = {};
+
+	    if(!this.meta) {
+		throw "Fetch hasn't been called or there was no meta in the response from tastypie"
+	    }
+
+	    // Get the limit and calculate the offset from the meta
+	    filters.limit = this.meta.limit;
+	    filters.offset = this.meta.offset + this.meta.limit;
+
+	    // Reach the end of the list
+	    // TODO Change this to not do anything
+	    if (filters.offset > this.meta.total_count) {
+		filters.offset = this.meta.total_count;
+		throw "End of the list. No more items."
+	    }
+
+	    // Create options.data if necessary and extend it with the filters
+	    options.data = options.data || {};
+	    _.extend(options.data, filters);
+
+	    // Call the regular fetch with the new options
+	    return this.fetch.call(this, options);
+	};
 })();
