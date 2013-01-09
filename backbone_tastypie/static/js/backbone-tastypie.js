@@ -77,8 +77,8 @@
 			
 			// Set up 'error' handling
 			dfd.fail( options.error );
-			options.error = function( xhr, status, resp ) {
-				dfd.rejectWith( options.context || options, [ xhr, status, resp ] );
+			options.error = function( model, xhr, options ) {
+				dfd.rejectWith( options.context || options, [ model, xhr, options ] );
 			};
 			
 			// Make the request, make it accessibly by assigning it to the 'request' property on the deferred
