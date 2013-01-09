@@ -131,7 +131,12 @@
 	};
 	
 	Backbone.Collection.prototype.url = function( models ) {
-		var url = this.urlRoot || ( models && models.length && models[0].urlRoot );
+		var url = _.isFunction( this.urlRoot ) ? this.urlRoot() : this.urlRoot;
+		// If the collection doesn't specify an url, try to obtain one from a model in the collection
+		if ( !url ) {
+			model = models && models.length && models[ 0 ];
+			url = model && ( _.isFunction( model.urlRoot ) ? model.urlRoot() : model.urlRoot );
+		}
 		url = url && addSlash( url );
 		
 		// Build a url to retrieve a set of models. This assume the last part of each model's idAttribute
