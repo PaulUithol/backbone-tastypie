@@ -154,5 +154,5 @@
 
 	var addSlash = function( str ) {
 		return str + ( ( str.length > 0 && str.charAt( str.length - 1 ) === '/' ) ? '' : '/' );
-	}
+	};
 })();
