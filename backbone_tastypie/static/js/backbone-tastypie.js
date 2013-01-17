@@ -58,20 +58,30 @@
 			
 			// Set up 'success' handling
 			dfd.done( options.success );
-			options.success = function( resp, status, xhr ) {
+			// Set up 'error' handling
+			dfd.fail( options.failure );
+
+			options.success = function( model, response, options ) {
 				// If create is successful but doesn't return a response, fire an extra GET.
 				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
-				if ( !resp && ( xhr.status === 201 || xhr.status === 202 || xhr.status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
-					var location = xhr.getResponseHeader( 'Location' ) || model.id;
-					return $.ajax( {
-						   url: location,
-						   headers: headers,
-						   success: dfd.resolve,
-						   error: dfd.reject
-						});
+				console.log('options', options)
+				if ( !options.xhr.responseText && ( options.xhr.status === 201 || options.xhr.status === 202 || options.xhr.status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
+					var location = options.xhr.getResponseHeader( 'Location' ) || model.id;
+					console.log('location', location)
+					return $.ajax({
+						url: location,
+						headers: headers,
+						success: function(data, textStatus, jqXHR) {
+							model.set(data, {silent: true})
+							return dfd.resolveWith(options.context || options, [ model, data, options ])
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							return dfd.rejectWith(options.context || options, [ model, jqXHR, options ])
+						}
+					});
 				}
 				else {
-					return dfd.resolveWith( options.context || options, [ resp, status, xhr ] );
+					return dfd.resolveWith( options.context || options, [ model, response, options ] );
 				}
 			};
 			
