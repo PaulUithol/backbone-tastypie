@@ -36,20 +36,16 @@
 	 */
 	Backbone.oldSync = Backbone.sync;
 	Backbone.sync = function( method, model, options ) {
-		var headers = '';
-	
 		if ( Backbone.Tastypie.apiKey && Backbone.Tastypie.apiKey.username.length ) {
-			headers = _.extend( {
+			options.headers = _.extend( {
 				'Authorization': 'ApiKey ' + Backbone.Tastypie.apiKey.username + ':' + Backbone.Tastypie.apiKey.key
 			}, options.headers );
-			options.headers = headers;
 		}
 
-		if ( Backbone.Tastypie.csrfToken && Backbone.Tastypie.csrfToken.length ) {
-			headers = _.extend( {
+		if ( Backbone.Tastypie.csrfToken ) {
+			options.headers = _.extend( {
 				'X-CSRFToken': Backbone.Tastypie.csrfToken 
 			}, options.headers );
-			options.headers = headers;		
 		}
 
 		if ( ( method === 'create' && Backbone.Tastypie.doGetOnEmptyPostResponse ) ||
@@ -67,7 +63,7 @@
 					var location = options.xhr.getResponseHeader( 'Location' ) || model.id;
 					return Backbone.ajax({
 						url: location,
-						headers: headers,
+						headers: options.headers,
 						success: function( data, textStatus, jqXHR ) {
 							return dfd.resolveWith( options.context || options, [ model, data, options ] );
 						},
