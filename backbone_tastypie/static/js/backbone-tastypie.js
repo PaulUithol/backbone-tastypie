@@ -58,25 +58,32 @@
 			
 			// Set up 'success' handling
 			dfd.done( options.success );
-			options.success = function( resp, status, xhr ) {
+
+			options.success = function( model, resp, options ) {
 				// If create is successful but doesn't return a response, fire an extra GET.
 				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
-				if ( !resp && ( xhr.status === 201 || xhr.status === 202 || xhr.status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
-					var location = xhr.getResponseHeader( 'Location' ) || model.id;
-					return $.ajax( {
-						   url: location,
-						   headers: headers,
-						   success: dfd.resolve,
-						   error: dfd.reject
-						});
+				var status = options.xhr.status;
+				if ( !resp && ( status === 201 || status === 202 || status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
+					var location = options.xhr.getResponseHeader( 'Location' ) || model.id;
+					return Backbone.ajax({
+						url: location,
+						headers: headers,
+						success: function( data, textStatus, jqXHR ) {
+							return dfd.resolveWith( options.context || options, [ model, data, options ] );
+						},
+						error: function( jqXHR, textStatus, errorThrown ) {
+							return dfd.rejectWith( options.context || options, [ model, jqXHR, options ] );
+						}
+					});
 				}
 				else {
-					return dfd.resolveWith( options.context || options, [ resp, status, xhr ] );
+					return dfd.resolveWith( options.context || options, [ model, resp, options ] );
 				}
 			};
 			
 			// Set up 'error' handling
 			dfd.fail( options.error );
+
 			options.error = function( model, xhr, options ) {
 				dfd.rejectWith( options.context || options, [ model, xhr, options ] );
 			};
@@ -134,7 +141,7 @@
 		var url = _.isFunction( this.urlRoot ) ? this.urlRoot() : this.urlRoot;
 		// If the collection doesn't specify an url, try to obtain one from a model in the collection
 		if ( !url ) {
-			model = models && models.length && models[ 0 ];
+			var model = models && models.length && models[ 0 ];
 			url = model && ( _.isFunction( model.urlRoot ) ? model.urlRoot() : model.urlRoot );
 		}
 		url = url && addSlash( url );

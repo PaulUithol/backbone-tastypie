@@ -13,12 +13,12 @@ if ( !window.console ) {
 }
 
 $(document).ready(function() {
-	$.ajax = function( obj ) {
-		window.requests.push( obj );
-		return obj;
+	$.ajax = function( options ) {
+		window.requests.push( options );
+		return options;
 	};
 	
-	Zoo = Backbone.RelationalModel.extend({
+	window.Zoo = Backbone.RelationalModel.extend({
 		relations: [{
 				type: Backbone.HasMany,
 				key: 'animals',
@@ -30,17 +30,17 @@ $(document).ready(function() {
 			}]
 	});
 	
-	Animal = Backbone.RelationalModel.extend({
+	window.Animal = Backbone.RelationalModel.extend({
 		urlRoot: '/animal' // Missing final '/' on purpose.
 	});
 	
-	AnimalCollection = Backbone.Collection.extend({
+	window.AnimalCollection = Backbone.Collection.extend({
 		urlRoot: '/animal', // Missing final '/' on purpose.
 		model: Animal
 	});
 	
 	// Model without a 'urlRoot'
-	Person = Backbone.RelationalModel.extend({});
+	window.Person = Backbone.RelationalModel.extend({});
 	
 	function initObjects() {
 		Backbone.Tastypie = {
@@ -83,15 +83,19 @@ $(document).ready(function() {
 			equal( dfd.request.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
 			
 				// Do the server's job; trigger the success callbacks
-				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
-				secondRequest.success( response, 'get', { status: 200 } );
+				window.requests[ 0 ] = _.extend( window.requests[ 0 ], xhr );
+				dfd.request.success( emptyResponse );
+
+				window.requests[ 1 ] = _.extend( window.requests[ 1 ], { status: 200 } );
+				var secondRequest = window.requests[ 1 ];
+				secondRequest.success( response );
 				
 			ok( window.requests.length === 2 );
 			equal( secondRequest.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
 		});
 
 		test( "CSRF token sent as an extra header", function() {
-			Backbone.Tastypie.csrfToken = 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX'
+			Backbone.Tastypie.csrfToken = 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX';
 
 			var animal = new Animal( { species: 'Panther' } );
 			var emptyResponse = '';
