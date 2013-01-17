@@ -1,9 +1,10 @@
 /**
- * Backbone-tastypie.js 0.1
+ * Backbone-tastypie.js 0.2
  * (c) 2011 Paul Uithol
  * 
  * Backbone-tastypie may be freely distributed under the MIT license.
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
+ * Depends on Backbone (and thus on Underscore as well): https://github.com/documentcloud/backbone.
  */
 (function( undefined ) {
 	"use strict";

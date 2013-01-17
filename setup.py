@@ -27,7 +27,7 @@ for dirpath, dirnames, filenames in os.walk('backbone_tastypie'):
 print data_files
 setup(
     name='Backbone-tastypie',
-    version='1.0',
+    version='0.2',
     description='A small conversion layer to make backbone.js and '
         'django-tastypie work together happily.',
     author='Paul Uithol',
