@@ -9,7 +9,7 @@
 (function( undefined ) {
 	"use strict";
 
-	// Backbone and underscore noConflict support. Save local copy of _ and Backbone objects.
+	// Backbone and underscore noConflict support. Save local reference to _ and Backbone objects.
 	var _, Backbone;
 	// CommonJS shim
 	if ( typeof window === 'undefined' ) {
