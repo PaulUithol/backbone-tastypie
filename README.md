@@ -14,14 +14,16 @@ Backbone-tastypie is available under the [MIT license](https://github.com/PaulUi
 
 ## Installation
 
+Backbone-tastypie depends on [Backbone](https://github.com/documentcloud/backbone) (version 0.9.10 or newer),
+and thus on [Underscore](https://github.com/documentcloud/underscore) (version 1.4.3 or newer).
+
 Add `backbone_tastypie` to your `INSTALLED_APPS` setting, and add the following to your base template:
 
 ```html
+<script type="text/javascript" src="{{ STATIC_URL }}js/underscore.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/backbone.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/backbone-tastypie.js"></script>
 ```
-
-Backbone-tastypie depends on [Backbone](https://github.com/documentcloud/backbone), version 0.9.10 (or newer),
-and thus on [Underscore](https://github.com/documentcloud/underscore), version 1.4.3 (or newer).
 
 ## How it works
 
@@ -78,5 +80,5 @@ Backbone.Tastypie.csrfToken = $.cookie( 'csrftoken' );
 
 ##### Backbone.Collection.prototype.url
 
-`Backbone.Collection.prototype.url` is overridden so it can build urls for a set of models when using the `fetchRelated`
-method in [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/).
+`Backbone.Collection.prototype.url` is overridden so it can build urls for a set of models. This is for example useful
+when using the `fetchRelated` method in [Backbone-relational](https://github.com/PaulUithol/Backbone-relational/).

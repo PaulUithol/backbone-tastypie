@@ -38,55 +38,58 @@
 	 */
 	Backbone.oldSync = Backbone.sync;
 	Backbone.sync = function( method, model, options ) {
-		if ( Backbone.Tastypie.apiKey && Backbone.Tastypie.apiKey.username.length ) {
-			options.headers = _.extend( {
-				'Authorization': 'ApiKey ' + Backbone.Tastypie.apiKey.username + ':' + Backbone.Tastypie.apiKey.key
-			}, options.headers );
+		var headers = {};
+
+		if ( Backbone.Tastypie.apiKey && Backbone.Tastypie.apiKey.username ) {
+			headers[ 'Authorization' ] = 'ApiKey ' + Backbone.Tastypie.apiKey.username + ':' + Backbone.Tastypie.apiKey.key;
 		}
 
 		if ( Backbone.Tastypie.csrfToken ) {
-			options.headers = _.extend( {
-				'X-CSRFToken': Backbone.Tastypie.csrfToken 
-			}, options.headers );
+			headers[ 'X-CSRFToken' ] = Backbone.Tastypie.csrfToken;
 		}
+
+		// Keep `headers` for a potential second request
+		headers = _.extend( headers, options.headers );
+		options.headers = headers;
 
 		if ( ( method === 'create' && Backbone.Tastypie.doGetOnEmptyPostResponse ) ||
 			( method === 'update' && Backbone.Tastypie.doGetOnEmptyPutResponse ) ) {
 			var dfd = new $.Deferred();
-			
-			// Set up 'success' handling
-			dfd.done( options.success );
 
-			options.success = function( model, resp, options ) {
+			// Set up 'success' handling
+			var success = options.success;
+			dfd.done( function( resp, status, xhr ) {
+				_.isFunction( success ) && success( resp );
+			});
+
+			options.success = function( resp, textStatus, xhr ) {
 				// If create is successful but doesn't return a response, fire an extra GET.
 				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
-				var status = options.xhr.status;
-				if ( !resp && ( status === 201 || status === 202 || status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
-					var location = options.xhr.getResponseHeader( 'Location' ) || model.id;
+				if ( !resp && ( xhr.status === 201 || xhr.status === 202 || xhr.status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
+					var location = xhr.getResponseHeader( 'Location' ) || model.id;
 					return Backbone.ajax({
 						url: location,
-						headers: options.headers,
-						success: function( data, textStatus, jqXHR ) {
-							return dfd.resolveWith( options.context || options, [ model, data, options ] );
-						},
-						error: function( jqXHR, textStatus, errorThrown ) {
-							return dfd.rejectWith( options.context || options, [ model, jqXHR, options ] );
-						}
+						headers: headers,
+						success: dfd.resolve,
+						error: dfd.reject
 					});
 				}
 				else {
-					return dfd.resolveWith( options.context || options, [ model, resp, options ] );
+					return dfd.resolveWith( options.context || options, [ resp, status, xhr ] );
 				}
 			};
 			
 			// Set up 'error' handling
-			dfd.fail( options.error );
+			var error = options.error;
+			dfd.fail( function( xhr, textStatus, errorText ) {
+				_.isFunction( error ) && error( xhr.responseText );
+			});
 
-			options.error = function( model, xhr, options ) {
-				dfd.rejectWith( options.context || options, [ model, xhr, options ] );
+			options.error = function( xhr, textStatus, errorText ) {
+				dfd.rejectWith( options.context || options, [ xhr, textStatus, xhr.responseText ] );
 			};
 			
-			// Make the request, make it accessibly by assigning it to the 'request' property on the deferred
+			// Create the request, and make it accessibly by assigning it to the 'request' property on the deferred
 			dfd.request = Backbone.oldSync( method, model, options );
 			return dfd;
 		}
@@ -132,7 +135,7 @@
 			this.meta = data.meta;
 		}
 		
-		return data && data.objects;
+		return data && data.objects || data;
 	};
 	
 	Backbone.Collection.prototype.url = function( models ) {

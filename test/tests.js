@@ -74,7 +74,6 @@ $(document).ready(function() {
 			};
 
 			var animal = new Animal( { species: 'Panther' } );
-			var emptyResponse = '';
 			var response = { id: 1, 'resource_uri': '/animal/1/' };
 			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
 			
@@ -83,12 +82,8 @@ $(document).ready(function() {
 			equal( dfd.request.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
 			
 				// Do the server's job; trigger the success callbacks
-				window.requests[ 0 ] = _.extend( window.requests[ 0 ], xhr );
-				dfd.request.success( emptyResponse );
-
-				window.requests[ 1 ] = _.extend( window.requests[ 1 ], { status: 200 } );
-				var secondRequest = window.requests[ 1 ];
-				secondRequest.success( response );
+				var secondRequest = dfd.request.success( '', 'created', xhr );
+				secondRequest.success( response, 'get', { status: 200 } );
 				
 			ok( window.requests.length === 2 );
 			equal( secondRequest.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
@@ -98,7 +93,6 @@ $(document).ready(function() {
 			Backbone.Tastypie.csrfToken = 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX';
 
 			var animal = new Animal( { species: 'Panther' } );
-			var emptyResponse = '';
 			var response = { id: 1, 'resource_uri': '/animal/1/' };
 			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
 			
@@ -107,7 +101,7 @@ $(document).ready(function() {
 			equal( dfd.request.headers[ 'X-CSRFToken' ], 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX' );
 			
 				// Do the server's job; trigger the success callbacks
-				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				var secondRequest = dfd.request.success( '', 'created', xhr );
 				secondRequest.success( response, 'get', { status: 200 } );
 				
 			ok( window.requests.length === 2 );
@@ -118,7 +112,6 @@ $(document).ready(function() {
 			expect( 3 );
 			
 			var animal = new Animal( { species: 'Turtle' } );
-			var emptyResponse = '';
 			var response = { id: 1, 'resource_uri': '/animal/1/' };
 			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
 			
@@ -129,7 +122,7 @@ $(document).ready(function() {
 			});
 			
 				// Do the server's job; trigger the success callbacks
-				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				var secondRequest = dfd.request.success( '', 'created', xhr );
 				secondRequest.success( response, 'get', { status: 200 } );
 
 			ok( window.requests.length === 2 );
@@ -180,7 +173,6 @@ $(document).ready(function() {
 			Backbone.Tastypie.doGetOnEmptyPutResponse = true;
 
 			var animal = new Animal( { species: 'Turtle', id: 1, 'resource_uri': '/animal/1/' } );
-			var emptyResponse = '';
 			var response = { id: 1, 'resource_uri': '/animal/1/', weight: 500 };
 			var xhr = { status: 202, getResponseHeader: function() { return null; } };
 
@@ -190,7 +182,7 @@ $(document).ready(function() {
 			});
 
 				// Do the server's job
-				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				var secondRequest = dfd.request.success( '', 'created', xhr );
 				secondRequest.success( response, 'get', { status: 200 } );
 
 			ok( window.requests.length === 2 );
@@ -231,8 +223,7 @@ $(document).ready(function() {
 
 		test( "Success callbacks are triggered, receive proper parameters", function() {
 			expect( 6 );
-			
-			var emptyResponse = '';
+
 			var response = { id: 1, 'resource_uri': '/animal/1/' };
 			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
 			
@@ -261,22 +252,23 @@ $(document).ready(function() {
 			});
 			
 				// Do the server's job
-				var secondRequest = dfd.request.success( emptyResponse, 'created', xhr );
+				var secondRequest = dfd.request.success( '', 'created', xhr );
 				secondRequest.success( response, 'get', { status: 200 } );
 		});
 		
 		test( "Error callbacks are triggered, receive proper parameters", function() {
 			expect( 2 );
 			
-			var xhr = { status: 404 };
+			var xhr = { status: 404, responseText: '{ code: 100 }' };
 			
 			var errorCallback = function( model, resp, options ) {
-				equal( resp.status, 404 );
+				equal( resp, '{ code: 100 }' );
 			};
 			
 			// Request with a response
 			var animal = new Animal( { species: 'Turtle' } );
 			var dfd = animal.save( null, { error: errorCallback } );
+
 			// Add another 'error' callback
 			dfd.fail( function() {
 				ok( true, "Fail triggered" );
