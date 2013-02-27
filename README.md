@@ -17,7 +17,7 @@ At this moment, Backbone-tastypie is unfortunately only compatible with older ve
 ## Installation
 
 Backbone-tastypie depends on [Backbone](https://github.com/documentcloud/backbone) (0.9.2, or master),
-and thus on [Underscore](https://github.com/documentcloud/underscore) (version 1.4.4 or newer).
+and thus on [Underscore](https://github.com/documentcloud/underscore) (version 1.4.3 or newer).
 
 Add `backbone_tastypie` to your `INSTALLED_APPS` setting, and add the following to your base template:
 
