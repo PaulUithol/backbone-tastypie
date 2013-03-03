@@ -13,9 +13,52 @@ if ( !window.console ) {
 }
 
 $(document).ready(function() {
-	$.ajax = function( options ) {
-		window.requests.push( options );
-		return options;
+	Backbone.ajax = function( request ) {
+		// If a `response` has been defined, execute it. If status < 299, trigger 'success'; otherwise, trigger 'error'
+		var response = null,
+			prevRequest = _.last( window.requests );
+
+		// Check for a nested response on `prevRequest`. If so, we're handling a follow-up request.
+		// Take the nested response from `prevRequest`.
+		if ( prevRequest && prevRequest.response && prevRequest.response.response && prevRequest.response.response.status ) {
+			response = prevRequest.response.response;
+		}
+		else if ( request.response && request.response.status ) {
+			response = request.response;
+		}
+
+		if ( response ) {
+			// Define a `getResponseHeader` function on `response`; used in some tests.
+			// See https://developer.mozilla.org/en-US/docs/DOM/XMLHttpRequest#getResponseHeader%28%29
+			response.getResponseHeader = function( headerName ) {
+				return response.headers && response.headers[ headerName ] || null;
+			};
+
+			// Add `request` to `window.requests`. After determining if this is a nested response,
+			// but before triggering callbacks that will make us end up in this function again.
+			window.requests.push( request );
+
+			/**
+			 * Trigger success/error with arguments like jQuery would:
+			 * // Success/Error
+			 * if ( isSuccess ) {
+			 *   deferred.resolveWith( callbackContext, [ success, statusText, jqXHR ] );
+			 * } else {
+			 *   deferred.rejectWith( callbackContext, [ jqXHR, statusText, error ] );
+			 * }
+			 */
+			if ( response.status >= 200 && response.status < 300 || response.status === 304 ) {
+				request.success( response.responseText, 'success', response );
+			}
+			else {
+				request.error( response, 'error', 'error' );
+			}
+		}
+		else {
+			window.requests.push( request );
+		}
+
+		return request;
 	};
 	
 	window.Zoo = Backbone.RelationalModel.extend({
@@ -74,208 +117,293 @@ $(document).ready(function() {
 			};
 
 			var animal = new Animal( { species: 'Panther' } );
-			var response = { id: 1, 'resource_uri': '/animal/1/' };
-			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
+			var response = {
+				headers: { 'Location': '/animal/1/' },
+				status: 201,
+				response: {
+					responseText: { id: 1, 'resource_uri': '/animal/1/' },
+					status: 200
+				}
+			};
 			
-			var dfd = animal.save();
+			var dfd = animal.save( null, { response: response } );
 
 			equal( dfd.request.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
-			
-				// Do the server's job; trigger the success callbacks
-				var secondRequest = dfd.request.success( '', 'created', xhr );
-				secondRequest.success( response, 'get', { status: 200 } );
 				
 			ok( window.requests.length === 2 );
-			equal( secondRequest.headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
+			equal( _.last( window.requests ).headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
+			ok( animal.id === '/animal/1/' );
 		});
 
 		test( "CSRF token sent as an extra header", function() {
 			Backbone.Tastypie.csrfToken = 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX';
 
 			var animal = new Animal( { species: 'Panther' } );
-			var response = { id: 1, 'resource_uri': '/animal/1/' };
-			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
-			
-			var dfd = animal.save();
+			var response = {
+				headers: { 'Location': '/animal/1/' },
+				status: 201,
+				response: {
+					responseText: { id: 1, 'resource_uri': '/animal/1/' },
+					status: 200
+				}
+			};
+
+			var dfd = animal.save( null, { response: response } );
 
 			equal( dfd.request.headers[ 'X-CSRFToken' ], 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX' );
-			
-				// Do the server's job; trigger the success callbacks
-				var secondRequest = dfd.request.success( '', 'created', xhr );
-				secondRequest.success( response, 'get', { status: 200 } );
-				
+
 			ok( window.requests.length === 2 );
-			equal( secondRequest.headers[ 'X-CSRFToken' ], 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX' );
+			equal( _.last( window.requests ).headers[ 'X-CSRFToken' ], 'J3TxPrDKCIW1z9byQrg0aaHbukYJGEkX' );
 		});
 	
-		test( "Extra GET on creation if the response is empty", function() {
+		test( "Extra GET on creation if the response is empty", 3, function() {
 			expect( 3 );
 			
 			var animal = new Animal( { species: 'Turtle' } );
-			var response = { id: 1, 'resource_uri': '/animal/1/' };
-			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
-			
-			var dfd = animal.save();
+			var response = {
+				headers: { 'Location': '/animal/1/' },
+				status: 201,
+				response: {
+					responseText: { id: 1, 'resource_uri': '/animal/1/' },
+					status: 200
+				}
+			};
+
+			var dfd = animal.save( null, { response: response } );
+
 			dfd.done( function() {
 				equal( animal.id, '/animal/1/' );
 				equal( animal.get( 'id' ), 1 );
 			});
-			
-				// Do the server's job; trigger the success callbacks
-				var secondRequest = dfd.request.success( '', 'created', xhr );
-				secondRequest.success( response, 'get', { status: 200 } );
 
 			ok( window.requests.length === 2 );
 		});
 
-		test( "No extra 'GET' on creation when 'doGetOnEmptyPostResponse' is false", function() {
-			expect( 2 );
-
+		test( "No extra 'GET' on creation when 'doGetOnEmptyPostResponse' is false", 2, function() {
 			Backbone.Tastypie.doGetOnEmptyPostResponse = false;
 
 			var animal = new Animal( { species: 'Turtle' } );
-			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
+			var response = {
+				headers: { 'Location': '/animal/1/' },
+				status: 201
+			};
 
-			var request = animal.save( {}, {
+			var request = animal.save( null, {
+				response: response,
 				success: function() {
 					equal( animal.id, null );
 				}
 			});
 
-				// Do the server's job
-				request.success( '', 'created', xhr );
-
 			ok( window.requests.length === 1 );
 		});
 
-		test( "No extra 'GET' on creation when there is a response", function() {
-			expect( 3 );
-			
+		test( "No extra 'GET' on creation when there is a response", 3, function() {
 			var animal = new Animal( { species: 'Turtle' } );
-			var response = { id: 1, 'resource_uri': '/animal/1/' };
-			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
+			var response = {
+				headers: { 'Location': '/animal/1/' },
+				status: 201,
+				responseText: { id: 1, 'resource_uri': '/animal/1/' }
+			};
 			
-			var dfd = animal.save();
+			var dfd = animal.save( null, { response: response } );
 			dfd.done( function() {
 				equal( animal.id, '/animal/1/' );
 				equal( animal.get( 'id' ), 1 );
 			});
-			
-				// Do the server's job
-				dfd.request.success( response, 'created', xhr );
 
 			ok( window.requests.length === 1 );
 		});
 
-		test( "Extra GET on update if the response is empty, and 'doGetOnEmptyPutResponse' is true", function() {
-			expect( 2 );
-
+		test( "Extra GET on update if the response is empty, and 'doGetOnEmptyPutResponse' is true", 2, function() {
 			Backbone.Tastypie.doGetOnEmptyPutResponse = true;
 
 			var animal = new Animal( { species: 'Turtle', id: 1, 'resource_uri': '/animal/1/' } );
-			var response = { id: 1, 'resource_uri': '/animal/1/', weight: 500 };
-			var xhr = { status: 202, getResponseHeader: function() { return null; } };
+			var response = {
+				status: 202,
+				response: {
+					status: 200,
+					responseText: { id: 1, 'resource_uri': '/animal/1/', weight: 500 }
+				}
+			};
 
-			var dfd = animal.save();
+			var dfd = animal.save( null, { response: response } );
 			dfd.done( function() {
 				equal( animal.get( 'weight' ), 500 );
 			});
 
-				// Do the server's job
-				var secondRequest = dfd.request.success( '', 'created', xhr );
-				secondRequest.success( response, 'get', { status: 200 } );
-
 			ok( window.requests.length === 2 );
 		});
 
-		test( "No extra 'GET' on update when there is a response", function() {
-			expect( 1 );
-
+		test( "No extra 'GET' on update when there is a response", 2, function() {
 			Backbone.Tastypie.doGetOnEmptyPutResponse = true;
 
 			var animal = new Animal( { species: 'Turtle', id: 1, 'resource_uri': '/animal/1/' } );
-			var response = { id: 1, 'resource_uri': '/animal/1/', weight: 500 };
-			var xhr = { status: 204, getResponseHeader: function() { return null; } };
+			var response = {
+				status: 202,
+				responseText: { id: 1, 'resource_uri': '/animal/1/', weight: 500 }
+			};
 
-			var dfd = animal.save();
-
-				// Do the server's job
-				dfd.request.success( response, 'created', xhr );
+			var dfd = animal.save( null, { response: response } );
+			dfd.done( function() {
+				equal( animal.get( 'weight' ), 500 );
+			});
 
 			ok( window.requests.length === 1 );
 		});
 
-		test( "No extra 'GET' on update when 'doGetOnEmptyPutResponse' is false", function() {
-			expect( 1 );
-
+		test( "No extra 'GET' on update when 'doGetOnEmptyPutResponse' is false", 2, function() {
 			var animal = new Animal( { species: 'Turtle', id: 1, 'resource_uri': '/animal/1/' } );
-			var xhr = { status: 204, getResponseHeader: function() { return null; } };
+			var response = {
+				status: 204
+			};
 
-			var request = animal.save( {}, {
+			var request = animal.save( { weight: 100 }, {
+				response: response,
 				success: function() {
-					equal( animal.get( 'weight' ), null );
+					equal( animal.get( 'weight' ), 100 );
 				}
 			});
 
-				// Do the server's job
-				request.success( '', 'created', xhr );
+			ok( window.requests.length === 1 );
 		});
 
-		test( "Success callbacks are triggered, receive proper parameters", function() {
-			expect( 6 );
-
-			var response = { id: 1, 'resource_uri': '/animal/1/' };
-			var xhr = { status: 201, getResponseHeader: function() { return '/animal/1/'; } };
-			
-			var successCallback = function( model, resp, xhr ) {
-				equal( resp.id, 1 );
-				equal( model.id, '/animal/1/' );
-			};
-			
-			// Request with a response
+		test( "Success callbacks are triggered, receive proper parameters", 18, function() {
+			/**
+			 * Case 1: request with an immediate response
+ 			 */
 			var animal = new Animal( { species: 'Turtle' } );
-			var dfd = animal.save( null, { success: successCallback } );
-			// Add another 'success' callback
-			dfd.done( function() {
-				ok( true, "Done triggered" );
+
+			var response = {
+				responseText: { id: 1, 'resource_uri': '/animal/1/' },
+				status: 201
+			};
+
+			var success = function( model, resp, options ) {
+				ok( model instanceof Backbone.Model );
+				equal( model.id, '/animal/1/' );
+
+				equal( resp.id, 1 );
+
+				ok( _.isObject( options ) );
+				equal( options.response, response );
+			};
+
+			var dfd = animal.save( null, { success: success, response: response } );
+
+			// Add 'success' callback to the Deferred
+			dfd.done( function( resp, textStatus, xhr ) {
+				equal( resp.id, 1, "resp.id is 1" );
+
+				equal( textStatus, 'success', "Status is 'success'" );
+
+				ok( _.isObject( xhr ) );
+				equal( xhr.status, 201, "Status is 201" );
 			});
-			
-				// Do the server's job
-				dfd.request.success( response, 'created', xhr );
-			
-			// Request without a response right away, response in second request
+
+
+			/**
+			 * Case 2: request without a response right away, response in second request
+ 			 */
 			animal = new Animal( { species: 'Lion' } );
-			dfd = animal.save( null, { success: successCallback } );
-			// Add another 'success' callback
-			dfd.done( function() {
-				ok( true, "Done triggered" );
+
+			response = {
+				headers: { 'Location': '/animal/2/' },
+				status: 201,
+				response: {
+					responseText: { id: 2, 'resource_uri': '/animal/2/' },
+					status: 200
+				}
+			};
+
+			success = function( model, resp, options ) {
+				ok( model instanceof Backbone.Model );
+				equal( model.id, '/animal/2/' );
+
+				equal( resp.id, 2 );
+
+				ok( _.isObject( options ) );
+				equal( options.response, response );
+			};
+
+			dfd = animal.save( null, { success: success, response: response } );
+			// Add 'success' callback to the Deferred
+			dfd.done( function( resp, textStatus, xhr ) {
+				equal( resp.id, 2, "resp.id is 2" );
+
+				equal( textStatus, 'success', "Status is 'success'" );
+
+				ok( _.isObject( xhr ) );
+				equal( xhr.status, 200, "Status is 200" );
 			});
-			
-				// Do the server's job
-				var secondRequest = dfd.request.success( '', 'created', xhr );
-				secondRequest.success( response, 'get', { status: 200 } );
 		});
 		
-		test( "Error callbacks are triggered, receive proper parameters", function() {
-			expect( 2 );
-			
-			var xhr = { status: 404, responseText: '{ code: 100 }' };
-			
-			var errorCallback = function( model, resp, options ) {
-				equal( resp, '{ code: 100 }' );
-			};
-			
-			// Request with a response
+		test( "Error callbacks are triggered, receive proper parameters", 8, function() {
+			/**
+			 * Case 1: request with an immediate response
+			 */
 			var animal = new Animal( { species: 'Turtle' } );
-			var dfd = animal.save( null, { error: errorCallback } );
 
-			// Add another 'error' callback
-			dfd.fail( function() {
-				ok( true, "Fail triggered" );
+			var response = {
+				responseText: { code: 100 },
+				status: 500
+			};
+
+			var error = function( model, resp, options ) {
+				ok( model instanceof Backbone.Model );
+
+				equal( resp.code, 100 );
+
+				ok( _.isObject( options ) );
+				equal( options.response, response );
+			};
+
+			var dfd = animal.save( null, { error: error, response: response } );
+
+			// Add 'error' callback to the Deferred
+			dfd.done( function( resp, textStatus, xhr ) {
+				equal( resp.code, 100 );
+
+				equal( textStatus, 'error', "Status is 'error'" );
+
+				ok( _.isObject( xhr ) );
+				equal( xhr.status, 500, "Status is 500" );
 			});
-			
-				// Do the server's job
-				dfd.request.error( xhr, 'error', 'Not found' );
+
+
+			/**
+			 * Case 2: request without a response right away, response in second request
+			 */
+			animal = new Animal( { species: 'Lion' } );
+
+			response = {
+				headers: { 'Location': '/animal/2/' },
+				status: 201,
+				response: {
+					responseText: { code: 600 },
+					status: 404
+				}
+			};
+
+			error = function( model, resp, options ) {
+				ok( model instanceof Backbone.Model );
+
+				equal( resp.code, 600 );
+
+				ok( _.isObject( options ) );
+				equal( options.response, response );
+			};
+
+			dfd = animal.save( null, { error: error, response: response } );
+			// Add 'success' callback to the Deferred
+			dfd.done( function( resp, textStatus, xhr ) {
+				equal( resp.code, 600 );
+
+				equal( textStatus, 'error', "Status is 'error'" );
+
+				ok( _.isObject( xhr ) );
+				equal( xhr.status, 404, "Status is 404" );
+			});
 		});
 	
 	
@@ -302,7 +430,7 @@ $(document).ready(function() {
 			equal( person.url(), '/person/2/' );
 
 			// Model's urlRoot should work as a function.
-			person.urlRoot = function() { return "/person"; }
+			person.urlRoot = function() { return "/person"; };
 			equal( person.url(), '/person/2/' );
 
 			// If the idAttribute is set, it's used as the uri verbatim.

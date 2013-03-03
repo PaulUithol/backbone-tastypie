@@ -58,7 +58,7 @@
 
 			// Set up 'success' handling
 			var success = options.success;
-			dfd.done( function( resp, status, xhr ) {
+			dfd.done( function( resp, textStatus, xhr ) {
 				_.isFunction( success ) && success( resp );
 			});
 
@@ -75,34 +75,34 @@
 					});
 				}
 				else {
-					return dfd.resolveWith( options.context || options, [ resp, status, xhr ] );
+					return dfd.resolveWith( options.context || options, [ resp, textStatus, xhr ] );
 				}
 			};
-			
+
 			// Set up 'error' handling
 			var error = options.error;
-			dfd.fail( function( xhr, textStatus, errorText ) {
+			dfd.fail( function( xhr, textStatus, errorThrown ) {
 				_.isFunction( error ) && error( xhr.responseText );
 			});
 
 			options.error = function( xhr, textStatus, errorText ) {
 				dfd.rejectWith( options.context || options, [ xhr, textStatus, xhr.responseText ] );
 			};
-			
+
 			// Create the request, and make it accessibly by assigning it to the 'request' property on the deferred
 			dfd.request = Backbone.oldSync( method, model, options );
 			return dfd;
 		}
-		
+
 		return Backbone.oldSync( method, model, options );
 	};
 
 	Backbone.Model.prototype.idAttribute = 'resource_uri';
-	
+
 	Backbone.Model.prototype.url = function() {
 		// Use the id if possible
 		var url = this.id;
-		
+
 		// If there's no idAttribute, use the 'urlRoot'. Fallback to try to have the collection construct a url.
 		// Explicitly add the 'id' attribute if the model has one.
 		if ( !url ) {
@@ -115,17 +115,17 @@
 		}
 
 		url = url && addSlash( url );
-		
+
 		return url || null;
 	};
-	
+
 	/**
 	 * Return the first entry in 'data.objects' if it exists and is an array, or else just plain 'data'.
 	 */
 	Backbone.Model.prototype.parse = function( data ) {
 		return data && data.objects && ( _.isArray( data.objects ) ? data.objects[ 0 ] : data.objects ) || data;
 	};
-	
+
 	/**
 	 * Return 'data.objects' if it exists.
 	 * If present, the 'data.meta' object is assigned to the 'collection.meta' var.
@@ -134,10 +134,10 @@
 		if ( data && data.meta ) {
 			this.meta = data.meta;
 		}
-		
+
 		return data && data.objects || data;
 	};
-	
+
 	Backbone.Collection.prototype.url = function( models ) {
 		var url = _.isFunction( this.urlRoot ) ? this.urlRoot() : this.urlRoot;
 		// If the collection doesn't specify an url, try to obtain one from a model in the collection
@@ -146,17 +146,17 @@
 			url = model && ( _.isFunction( model.urlRoot ) ? model.urlRoot() : model.urlRoot );
 		}
 		url = url && addSlash( url );
-		
+
 		// Build a url to retrieve a set of models. This assume the last part of each model's idAttribute
 		// (set to 'resource_uri') contains the model's id.
 		if ( models && models.length ) {
 			var ids = _.map( models, function( model ) {
-					var parts = _.compact( model.id.split( '/' ) );
-					return parts[ parts.length - 1 ];
-				});
+				var parts = _.compact( model.id.split( '/' ) );
+				return parts[ parts.length - 1 ];
+			});
 			url += 'set/' + ids.join( ';' ) + '/';
 		}
-		
+
 		return url || null;
 	};
 
