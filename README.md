@@ -5,7 +5,7 @@ also compatible. See for example [TastyMongo](https://github.com/ProgressiveComp
 
 Backbone-tastypie is available under the [MIT license](https://github.com/PaulUithol/backbone-tastypie/blob/master/LICENSE.txt).
 
-At this moment, Backbone-tastypie is unfortunately only compatible with older versions of Backbone (0.9.2) or master!
+***At this moment, Backbone-tastypie is unfortunately only compatible with Backbone [master](https://raw.github.com/documentcloud/backbone/master/backbone.js) or older versions (0.9.2)!***
 
 ## Contents
 
