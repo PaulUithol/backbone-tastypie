@@ -5,7 +5,8 @@ also compatible. See for example [TastyMongo](https://github.com/ProgressiveComp
 
 Backbone-tastypie is available under the [MIT license](https://github.com/PaulUithol/backbone-tastypie/blob/master/LICENSE.txt).
 
-***At this moment, Backbone-tastypie is unfortunately only compatible with Backbone [master](https://raw.github.com/documentcloud/backbone/master/backbone.js) or older versions (0.9.2)!***
+Backbone-tastypie depends on [Backbone](https://github.com/documentcloud/backbone) (1.0.0 or newer),
+and thus on [Underscore](https://github.com/documentcloud/underscore) (1.4.4 or newer).
 
 ## Contents
 
@@ -15,9 +16,6 @@ Backbone-tastypie is available under the [MIT license](https://github.com/PaulUi
 * [Methods](#methods)
 
 ## Installation
-
-Backbone-tastypie depends on [Backbone](https://github.com/documentcloud/backbone) (0.9.2, or master),
-and thus on [Underscore](https://github.com/documentcloud/underscore) (version 1.4.3 or newer).
 
 Add `backbone_tastypie` to your `INSTALLED_APPS` setting, and add the following to your base template:
 
