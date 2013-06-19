@@ -1,25 +1,26 @@
 /**
  * Backbone-tastypie.js 0.2
  * (c) 2011 Paul Uithol
- * 
+ *
  * Backbone-tastypie may be freely distributed under the MIT license.
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
  * Depends on Backbone (and thus on Underscore as well): https://github.com/documentcloud/backbone.
  */
-(function( undefined ) {
-	"use strict";
-
-	// Backbone and underscore noConflict support. Save local reference to _ and Backbone objects.
-	var _, Backbone;
-	// CommonJS shim
-	if ( typeof window === 'undefined' ) {
-		_ = require( 'underscore' );
-		Backbone = require( 'backbone' );
-	}
-	else {
-		_ = window._;
-		Backbone = window.Backbone;
-	}
+ (function(root, factory) {
+  // Set up Backbone-tastypie appropriately for the environment.
+  if (typeof exports !== 'undefined') {
+    // Node/CommonJS
+    factory(root, require('backbone'), require('underscore'));
+  } else if (typeof define === 'function' && define.amd) {
+    // AMD
+    define(['backbone', 'underscore'], function(Backbone, _) {
+      factory(root, Backbone, _);
+    });
+  } else {
+    // Browser globals
+    factory(root, root.Backbone, root._);
+  }
+}(this, function(root, Backbone, _) {
 
 	Backbone.Tastypie = {
 		doGetOnEmptyPostResponse: true,
@@ -163,4 +164,4 @@
 	var addSlash = function( str ) {
 		return str + ( ( str.length > 0 && str.charAt( str.length - 1 ) === '/' ) ? '' : '/' );
 	};
-})();
+}));
