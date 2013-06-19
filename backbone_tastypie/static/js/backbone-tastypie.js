@@ -21,6 +21,7 @@
     factory(root, root.Backbone, root._);
   }
 }(this, function(root, Backbone, _) {
+  "use strict";
 
 	Backbone.Tastypie = {
 		doGetOnEmptyPostResponse: true,
