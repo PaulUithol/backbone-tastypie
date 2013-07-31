@@ -32,6 +32,11 @@
 	};
 
 	/**
+	 * Keep compatibility with 0.9.x Backbone
+	 */
+	var ajax = Backbone.ajax || $.ajax;
+
+	/**
 	 * Override Backbone's sync function, to do a GET upon receiving a HTTP CREATED.
 	 * This requires 2 requests to do a create, so you may want to use some other method in production.
 	 * Modified from http://joshbohde.com/blog/backbonejs-and-django
@@ -73,7 +78,7 @@
 					else {
 						location = resp.resource_uri;
 					}
-					return Backbone.ajax({
+					return ajax({
 						url: location,
 						headers: headers,
 						success: dfd.resolve,
