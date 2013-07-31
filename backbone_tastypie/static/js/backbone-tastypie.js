@@ -1,7 +1,7 @@
 /**
  * Backbone-tastypie.js 0.2
  * (c) 2011 Paul Uithol
- * 
+ *
  * Backbone-tastypie may be freely distributed under the MIT license.
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
  * Depends on Backbone (and thus on Underscore as well): https://github.com/documentcloud/backbone.
@@ -65,8 +65,14 @@
 			options.success = function( resp, textStatus, xhr ) {
 				// If create is successful but doesn't return a response, fire an extra GET.
 				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
-				if ( !resp && ( xhr.status === 201 || xhr.status === 202 || xhr.status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
-					var location = xhr.getResponseHeader( 'Location' ) || model.id;
+				if ( xhr.status === 201 || xhr.status === 202 || xhr.status === 204 ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
+					var location;
+					if (!resp) {
+						location = xhr.getResponseHeader( 'Location' ) || model.id;
+					}
+					else {
+						location = resp.resource_uri;
+					}
 					return Backbone.ajax({
 						url: location,
 						headers: headers,
