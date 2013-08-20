@@ -82,7 +82,10 @@
 			// Set up 'error' handling
 			var error = options.error;
 			dfd.fail( function( xhr, textStatus, errorThrown ) {
-				_.isFunction( error ) && error( xhr.responseText );
+				if (_.isFunction( error )) {
+					var jsonResponse = /json/.test( xhr.getResponseHeader( 'Content-Type' ) );
+					error( jsonResponse ? xhr.responseJSON : xhr.responseText );
+				}
 			});
 
 			options.error = function( xhr, textStatus, errorText ) {
