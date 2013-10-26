@@ -66,7 +66,7 @@
 				// If create is successful but doesn't return a response, fire an extra GET.
 				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
 				if ( !resp && ( xhr.status === 201 || xhr.status === 202 || xhr.status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
-					var location = xhr.getResponseHeader( 'Location' ) || model.id;
+					var location = xhr.getResponseHeader( 'Location' ) || model.url();
 					return Backbone.ajax({
 						url: location,
 						headers: headers,
@@ -100,8 +100,8 @@
 	Backbone.Model.prototype.idAttribute = 'resource_uri';
 
 	Backbone.Model.prototype.url = function() {
-		// Use the id if possible
-		var url = this.id;
+		// Use the 'resource_uri' if possible
+		var url = this.get( 'resource_uri' );
 
 		// If there's no idAttribute, use the 'urlRoot'. Fallback to try to have the collection construct a url.
 		// Explicitly add the 'id' attribute if the model has one.
@@ -151,7 +151,7 @@
 		// (set to 'resource_uri') contains the model's id.
 		if ( models && models.length ) {
 			var ids = _.map( models, function( model ) {
-				var parts = _.compact( model.id.split( '/' ) );
+				var parts = _.compact( model.url().split( '/' ) );
 				return parts[ parts.length - 1 ];
 			});
 			url += 'set/' + ids.join( ';' ) + '/';

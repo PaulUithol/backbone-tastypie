@@ -132,7 +132,7 @@ $(document).ready(function() {
 				
 			ok( window.requests.length === 2 );
 			equal( _.last( window.requests ).headers[ 'Authorization' ], 'ApiKey daniel:204db7bcfafb2deb7506b89eb3b9b715b09905c8' );
-			ok( animal.id === '/animal/1/' );
+			equal( animal.id, '/animal/1/' );
 		});
 
 		test( "CSRF token sent as an extra header", function() {
