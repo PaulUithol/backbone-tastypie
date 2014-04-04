@@ -35,4 +35,5 @@ setup(
     url='https://github.com/PaulUithol',
     packages=['backbone_tastypie'],
     package_data={'backbone_tastypie': data_files},
+    zip_safe=False,
 )
