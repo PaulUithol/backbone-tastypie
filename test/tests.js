@@ -63,14 +63,14 @@ $(document).ready(function() {
 	
 	window.Zoo = Backbone.RelationalModel.extend({
 		relations: [{
-				type: Backbone.HasMany,
-				key: 'animals',
-				relatedModel: 'Animal',
-				collectionType: 'AnimalCollection',
-				reverseRelation: {
-					key: 'livesIn'
-				}
-			}]
+			type: Backbone.HasMany,
+			key: 'animals',
+			relatedModel: 'Animal',
+			collectionType: 'AnimalCollection',
+			reverseRelation: {
+				key: 'livesIn'
+			}
+		}]
 	});
 	
 	window.Animal = Backbone.RelationalModel.extend({
@@ -99,10 +99,8 @@ $(document).ready(function() {
 		// Reset last ajax requests
 		window.requests = [];
 		
-		// save _reverseRelations, otherwise we'll get a lot of warnings about existing relations
-		var oldReverseRelations = Backbone.Relational.store._reverseRelations;
-		Backbone.Relational.store = new Backbone.Store();
-		Backbone.Relational.store._reverseRelations = oldReverseRelations;
+		Backbone.Relational.store.reset();
+		Backbone.Relational.store.addModelScope( window );
 		Backbone.Relational.eventQueue = new Backbone.BlockingQueue();
 	}
 	
