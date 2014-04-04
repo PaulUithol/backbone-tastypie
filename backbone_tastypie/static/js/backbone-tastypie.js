@@ -6,20 +6,21 @@
  * Add or override Backbone.js functionality, for compatibility with django-tastypie.
  * Depends on Backbone (and thus on Underscore as well): https://github.com/documentcloud/backbone.
  */
-(function( undefined ) {
-	"use strict";
-
-	// Backbone and underscore noConflict support. Save local reference to _ and Backbone objects.
-	var _, Backbone;
-	// CommonJS shim
-	if ( typeof window === 'undefined' ) {
-		_ = require( 'underscore' );
-		Backbone = require( 'backbone' );
+( function( root, factory ) {
+	// Set up Backbone-relational for the environment. Start with AMD.
+	if ( typeof define === 'function' && define.amd ) {
+		define( [ 'exports', 'backbone', 'underscore' ], factory );
 	}
+	// Next for Node.js or CommonJS.
+	else if ( typeof exports !== 'undefined' ) {
+		factory( exports, require( 'backbone' ), require( 'underscore' ) );
+	}
+	// Finally, as a browser global. Use `root` here as it references `window`.
 	else {
-		_ = window._;
-		Backbone = window.Backbone;
+		factory( root, root.Backbone, root._ );
 	}
+}( this, function( exports, Backbone, _ ) {
+	"use strict";
 
 	Backbone.Tastypie = {
 		doGetOnEmptyPostResponse: true,
@@ -163,4 +164,4 @@
 	var addSlash = function( str ) {
 		return str + ( ( str.length > 0 && str.charAt( str.length - 1 ) === '/' ) ? '' : '/' );
 	};
-})();
+}));
