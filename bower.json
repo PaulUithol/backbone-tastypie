@@ -1,0 +1,10 @@
+{
+  "name": "backbone-tastypie",
+  "main": "backbone_tastypie/tatic/js/backbone-tastypie.js",
+  "dependencies": {
+    "underscore": ">=1.4.4",
+    "backbone": ">=1.0.0"
+  },
+  "ignore": ["test", ".html"],
+  "version": "0.2"
+}
