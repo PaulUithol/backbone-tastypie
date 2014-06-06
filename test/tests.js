@@ -61,6 +61,8 @@ $(document).ready(function() {
 		return request;
 	};
 	
+	var defaultTastypieOptions = $.extend( {}, Backbone.Tastypie );
+	
 	window.Zoo = Backbone.RelationalModel.extend({
 		relations: [{
 			type: Backbone.HasMany,
@@ -86,15 +88,7 @@ $(document).ready(function() {
 	window.Person = Backbone.RelationalModel.extend({});
 	
 	function initObjects() {
-		Backbone.Tastypie = {
-			doGetOnEmptyPostResponse: true,
-			doGetOnEmptyPutResponse: false,
-			apiKey: {
-				username: '',
-				key: ''
-			},
-			csrfToken: ''
-		};
+		Backbone.Tastypie = $.extend( {}, defaultTastypieOptions );
 
 		// Reset last ajax requests
 		window.requests = [];
@@ -402,6 +396,30 @@ $(document).ready(function() {
 				ok( _.isObject( xhr ) );
 				equal( xhr.status, 404, "Status is 404" );
 			});
+		});
+		
+		test( "defaultOptions are set", function() {
+			Backbone.Tastypie.defaultOptions = {
+				crossDomain: false,
+				timeout: 42
+			};
+
+			var animal = new Animal( { species: 'Leopard' } );
+			var response = {
+				headers: { 'Location': '/animal/2/' },
+				status: 201,
+				response: {
+					responseText: { id: 1, 'resource_uri': '/animal/2/' },
+					status: 200
+				}
+			};
+
+			var dfd = animal.save( null, { response: response } );
+
+			equal( dfd.request.timeout, 42 );
+
+			ok( window.requests.length === 2 );
+			equal( _.last( window.requests ).timeout, 42 );
 		});
 	
 	

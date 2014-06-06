@@ -29,7 +29,8 @@
 			username: '',
 			key: ''
 		},
-		csrfToken: ''
+		csrfToken: '',
+		defaultOptions: {}
 	};
 
 	/**
@@ -39,7 +40,8 @@
 	 */
 	Backbone.oldSync = Backbone.sync;
 	Backbone.sync = function( method, model, options ) {
-		var headers = {};
+		var headers = {},
+			options = _.defaults( options || {}, Backbone.Tastypie.defaultOptions );
 
 		if ( Backbone.Tastypie.apiKey && Backbone.Tastypie.apiKey.username ) {
 			headers[ 'Authorization' ] = 'ApiKey ' + Backbone.Tastypie.apiKey.username + ':' + Backbone.Tastypie.apiKey.key;
@@ -67,13 +69,15 @@
 				// If create is successful but doesn't return a response, fire an extra GET.
 				// Otherwise, resolve the deferred (which triggers the original 'success' callbacks).
 				if ( !resp && ( xhr.status === 201 || xhr.status === 202 || xhr.status === 204 ) ) { // 201 CREATED, 202 ACCEPTED or 204 NO CONTENT; response null or empty.
-					var location = xhr.getResponseHeader( 'Location' ) || model.url();
-					return Backbone.ajax({
-						url: location,
-						headers: headers,
-						success: dfd.resolve,
-						error: dfd.reject
-					});
+					options = _.defaults( {
+							url: xhr.getResponseHeader( 'Location' ) || model.url(),
+							headers: headers,
+							success: dfd.resolve,
+							error: dfd.reject
+						},
+						Backbone.Tastypie.defaultOptions
+					);
+					return Backbone.ajax( options );
 				}
 				else {
 					return dfd.resolveWith( options.context || options, [ resp, textStatus, xhr ] );
