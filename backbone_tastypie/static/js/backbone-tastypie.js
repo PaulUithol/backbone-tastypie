@@ -1,5 +1,5 @@
 /**
- * Backbone-tastypie.js 0.2
+ * Backbone-tastypie.js 0.2.0
  * (c) 2011 Paul Uithol
  * 
  * Backbone-tastypie may be freely distributed under the MIT license.
