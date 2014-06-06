@@ -23,15 +23,21 @@
 	"use strict";
 
 	Backbone.Tastypie = {
-		doGetOnEmptyPostResponse: true,
-		doGetOnEmptyPutResponse: false,
 		apiKey: {
 			username: '',
 			key: ''
 		},
+		constructSetUrl: function( ids ) {
+			return 'set/' + ids.join( ';' ) + '/';
+		},
 		csrfToken: '',
-		defaultOptions: {}
+		defaultOptions: {},
+		doGetOnEmptyPostResponse: true,
+		doGetOnEmptyPutResponse: false,
+		idAttribute: 'resource_uri'
 	};
+	
+	Backbone.Model.prototype.idAttribute = Backbone.Tastypie.idAttribute;
 
 	/**
 	 * Override Backbone's sync function, to do a GET upon receiving a HTTP CREATED.
@@ -102,8 +108,6 @@
 		return Backbone.oldSync( method, model, options );
 	};
 
-	Backbone.Model.prototype.idAttribute = 'resource_uri';
-
 	Backbone.Model.prototype.url = function() {
 		// Use the 'resource_uri' if possible
 		var url = this.get( 'resource_uri' );
@@ -158,7 +162,7 @@
 				var parts = _.compact( model.url().split( '/' ) );
 				return parts[ parts.length - 1 ];
 			});
-			url += 'set/' + ids.join( ';' ) + '/';
+			url += Backbone.Tastypie.constructSetUrl( ids );
 		}
 
 		return url || null;
