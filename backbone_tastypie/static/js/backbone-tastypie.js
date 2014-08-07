@@ -129,6 +129,8 @@
 
 	/**
 	 * Return the first entry in 'data.objects' if it exists and is an array, or else just plain 'data'.
+	 *
+	 * @param {object} data
 	 */
 	Backbone.Model.prototype.parse = function( data ) {
 		return data && data.objects && ( _.isArray( data.objects ) ? data.objects[ 0 ] : data.objects ) || data;
@@ -137,6 +139,8 @@
 	/**
 	 * Return 'data.objects' if it exists.
 	 * If present, the 'data.meta' object is assigned to the 'collection.meta' var.
+	 *
+	 * @param {object} data
 	 */
 	Backbone.Collection.prototype.parse = function( data ) {
 		if ( data && data.meta ) {
@@ -146,13 +150,26 @@
 		return data && data.objects || data;
 	};
 
+	/**
+	 * Construct a url for the collection, or for a set of models in the collection if the `models` param is used.
+	 * Will attempt to use its own `urlRoot` first; if that doesn't yield a result, attempts to use the `urlRoot`
+	 * on models in the collection.
+	 *
+	 * @param {Backbone.Model[]} [models]
+	 */
 	Backbone.Collection.prototype.url = function( models ) {
 		var url = _.result( this, 'urlRoot' );
+		
 		// If the collection doesn't specify an url, try to obtain one from a model in the collection
 		if ( !url ) {
-			var model = models && models.length && models[ 0 ];
+			var model = this.models.length && this.models[ 0 ];
 			url = model && _.result( model, 'urlRoot' );
 		}
+		
+		if ( !url ) {
+			url = _.result( this.model.prototype, 'urlRoot' );
+		}
+		
 		url = url && addSlash( url );
 
 		// Build a url to retrieve a set of models. This assume the last part of each model's idAttribute
