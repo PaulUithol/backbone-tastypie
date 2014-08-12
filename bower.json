@@ -1,6 +1,6 @@
 {
   "name": "backbone-tastypie",
-  "main": "backbone_tastypie/tatic/js/backbone-tastypie.js",
+  "main": "backbone_tastypie/static/js/backbone-tastypie.js",
   "dependencies": {
     "underscore": ">=1.4.4",
     "backbone": ">=1.0.0"
