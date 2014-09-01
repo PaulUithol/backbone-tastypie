@@ -155,7 +155,7 @@
 	 * Will attempt to use its own `urlRoot` first; if that doesn't yield a result, attempts to use the `urlRoot`
 	 * on models in the collection.
 	 *
-	 * @param {Backbone.Model[]} [models]
+	 * @param {Backbone.Model[]|string[]} [models]
 	 */
 	Backbone.Collection.prototype.url = function( models ) {
 		var url = _.result( this, 'urlRoot' );
@@ -172,11 +172,12 @@
 		
 		url = url && addSlash( url );
 
-		// Build a url to retrieve a set of models. This assume the last part of each model's idAttribute
-		// (set to 'resource_uri') contains the model's id.
+		// Build a url to retrieve a set of models. This assume the last part of each model's idAttribute contains
+		// the model's id. Will work when idAttribute is set to 'resource_uri' (default), but for a plain 'id' as well.
 		if ( models && models.length ) {
 			var ids = _.map( models, function( model ) {
-				var parts = _.compact( model.url().split( '/' ) );
+				var id = model instanceof Backbone.Model ? model.url() : model,
+					parts = _.compact( id.split( '/' ) );
 				return parts[ parts.length - 1 ];
 			});
 			url += Backbone.Tastypie.constructSetUrl( ids );
